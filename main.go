@@ -25,6 +25,7 @@ func main() {
 
 	app := echo.New()
 	app.GET("/login/initiate", oauthController.Redirect)
+	app.GET("/login/authorize", oauthController.CallbackHandler)
 
 	app.Logger.Fatal(app.Start(fmt.Sprintf(":%s", os.Getenv("APP_PORT"))))
 }
