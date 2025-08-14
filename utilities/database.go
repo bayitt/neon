@@ -3,6 +3,7 @@ package utilities
 import (
 	"fmt"
 	"log"
+	"neon/models"
 	"os"
 
 	"gorm.io/driver/postgres"
@@ -29,4 +30,9 @@ func GetDatabaseObject() *gorm.DB {
 	database = db
 
 	return database
+}
+
+func InitDatabase() {
+	database := GetDatabaseObject()
+	database.AutoMigrate(&models.Category{}, &models.Series{}, &models.Review{}, &models.Subscriber{})
 }

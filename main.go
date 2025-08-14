@@ -3,7 +3,7 @@ package main
 import (
 	"fmt"
 	"log"
-	"neon/models"
+	"neon/controllers"
 	"neon/utilities"
 	"os"
 
@@ -18,10 +18,13 @@ func main() {
 		log.Fatal("There was a problem loading the environment variables")
 	}
 
-	database := utilities.GetDatabaseObject()
-	database.AutoMigrate(&models.Category{}, &models.Series{}, &models.Review{}, &models.Subscriber{})
+	utilities.InitDatabase()
+	utilities.RegisterOauthProviders()
+
+	oauthController := &controllers.OauthController{}
 
 	app := echo.New()
+	app.GET("/login/initiate", oauthController.Redirect)
 
 	app.Logger.Fatal(app.Start(fmt.Sprintf(":%s", os.Getenv("APP_PORT"))))
 }
