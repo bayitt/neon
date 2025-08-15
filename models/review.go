@@ -19,7 +19,7 @@ type Review struct {
 	Content    string      `gorm:"type:text;not null" json:"content"`
 	CreatedAt  time.Time   `gorm:"not null" json:"created_at"`
 	UpdatedAt  time.Time   `gorm:"not null" json:"-"`
-	Categories []*Category `gorm:"many2many:categories_reviews"`
+	Categories []*Category `gorm:"many2many:categories_reviews" json:"-"`
 }
 
 func (review *Review) BeforeCreate(transaction *gorm.DB) (err error) {

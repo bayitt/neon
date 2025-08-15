@@ -7,6 +7,7 @@ import (
 	"neon/utilities"
 	"os"
 
+	"github.com/go-playground/validator/v10"
 	"github.com/joho/godotenv"
 	"github.com/labstack/echo/v4"
 )
@@ -21,11 +22,10 @@ func main() {
 	utilities.InitDatabase()
 	utilities.RegisterOauthProviders()
 
-	oauthController := &controllers.OauthController{}
-
 	app := echo.New()
-	app.GET("/login/initiate", oauthController.Redirect)
-	app.GET("/login/authorize", oauthController.CallbackHandler)
+	app.Validator = &utilities.RequestValidator{Validator: validator.New()}
+	controllers.RegisterOauthRoutes(app.Group("/login"))
+	controllers.RegisterCategoryRoutes(app.Group("/categories"))
 
 	app.Logger.Fatal(app.Start(fmt.Sprintf(":%s", os.Getenv("APP_PORT"))))
 }
