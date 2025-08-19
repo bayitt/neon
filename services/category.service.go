@@ -3,22 +3,13 @@ package services
 import (
 	"errors"
 	"fmt"
-	"math/rand"
 	"neon/dto"
 	"neon/models"
+	"neon/utilities"
 	"strings"
 
 	"gorm.io/gorm"
 )
-
-func generateRandomString(length int) string {
-	const charset = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789"
-	bytes := make([]byte, length)
-	for i := range bytes {
-		bytes[i] = charset[rand.Intn(len(charset))]
-	}
-	return string(bytes)
-}
 
 type CategoryService struct {
 	DB *gorm.DB
@@ -36,7 +27,7 @@ func (cs *CategoryService) FindUnique(field string, value string) (models.Catego
 }
 
 func (cs *CategoryService) Create(ccDto *dto.CreateCategoryDto) (*models.Category, error) {
-	slug := "/" + strings.Replace(ccDto.Name, " ", "-", -1) + "-" + generateRandomString(4)
+	slug := "/" + strings.Replace(ccDto.Name, " ", "-", -1) + "-" + utilities.GenerateRandomString(4)
 	category := &models.Category{Name: ccDto.Name, Slug: slug}
 	result := cs.DB.Save(&category)
 
@@ -52,13 +43,13 @@ func (cs *CategoryService) Update(category models.Category, ucDto *dto.UpdateCat
 		return category, nil
 	}
 
-	slug := "/" + strings.Replace(ucDto.Name, " ", "-", -1) + "-" + generateRandomString(4)
+	slug := "/" + strings.Replace(ucDto.Name, " ", "-", -1) + "-" + utilities.GenerateRandomString(4)
 	category.Name = ucDto.Name
 	category.Slug = slug
 	result := cs.DB.Save(&category)
 
 	if result.Error != nil {
-		return category, fmt.Errorf(result.Error.Error())
+		return category, errors.New(result.Error.Error())
 	}
 
 	return category, nil

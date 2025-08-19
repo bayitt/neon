@@ -14,6 +14,7 @@ type Review struct {
 	Series     *Series     `gorm:"constraint:OnUpdate:CASCADE,onDelete:RESTRICT" json:"-"`
 	Title      string      `gorm:"type:varchar(255);not null" json:"title"`
 	Slug       string      `gorm:"unique;type:varchar(255);not null" json:"slug"`
+	Author     string      `gorm:"type:varchar(75)" json:"author"`
 	Image      *string     `gorm:"type:varchar(255)" json:"image"`
 	Status     uint        `gorm:"not null;default:0" json:"status"`
 	Content    string      `gorm:"type:text;not null" json:"content"`

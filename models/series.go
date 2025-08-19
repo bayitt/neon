@@ -14,6 +14,7 @@ type Series struct {
 	Category    Category  `gorm:"constraint:OnUpdate:CASCADE,onDelete:RESTRICT" json:"-"`
 	Name        string    `gorm:"unique;type:varchar(255);not null" json:"name"`
 	Slug        string    `gorm:"unique;type:varchar(255);not null" json:"slug"`
+	Author      string    `gorm:"type:varchar(75)" json:"author"`
 	Description *string   `gorm:"type:text" json:"description"`
 	CreatedAt   time.Time `gorm:"not null" json:"-"`
 	UpdatedAt   time.Time `gorm:"not null" json:"-"`

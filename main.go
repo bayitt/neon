@@ -26,6 +26,7 @@ func main() {
 	app.Validator = &utilities.RequestValidator{Validator: validator.New()}
 	controllers.RegisterOauthRoutes(app.Group("/login"))
 	controllers.RegisterCategoryRoutes(app.Group("/categories"))
+	controllers.RegisterSeriesRoutes(app.Group("/series"))
 
 	app.Logger.Fatal(app.Start(fmt.Sprintf(":%s", os.Getenv("APP_PORT"))))
 }
