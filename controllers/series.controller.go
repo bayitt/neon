@@ -17,9 +17,8 @@ type SeriesController struct {
 
 func RegisterSeriesRoutes(group *echo.Group) {
 	db := utilities.GetDatabaseObject()
-	cs := &services.CategoryService{DB: db}
 	ss := &services.SeriesService{DB: db}
-	sc := &SeriesController{service: ss, validator: &validators.SeriesValidator{Cs: cs, Ss: ss}}
+	sc := &SeriesController{service: ss, validator: &validators.SeriesValidator{Ss: ss}}
 
 	group.Use(middleware.AuthMiddleware)
 	group.POST("", sc.create)

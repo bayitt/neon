@@ -26,13 +26,13 @@ func (cs *CategoryService) FindUnique(field string, value string) (models.Catego
 	return category, nil
 }
 
-func (cs *CategoryService) Create(ccDto *dto.CreateCategoryDto) (*models.Category, error) {
+func (cs *CategoryService) Create(ccDto *dto.CreateCategoryDto) (models.Category, error) {
 	slug := "/" + strings.Replace(ccDto.Name, " ", "-", -1) + "-" + utilities.GenerateRandomString(4)
-	category := &models.Category{Name: ccDto.Name, Slug: slug}
+	category := models.Category{Name: ccDto.Name, Slug: slug}
 	result := cs.DB.Save(&category)
 
 	if result.Error != nil {
-		return category, fmt.Errorf("there was an issue creating the category")
+		return category, errors.New(result.Error.Error())
 	}
 
 	return category, nil
