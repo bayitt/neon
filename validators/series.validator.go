@@ -12,7 +12,8 @@ import (
 )
 
 type SeriesValidator struct {
-	Service *services.SeriesService
+	Cs *services.CategoryService
+	Ss *services.SeriesService
 }
 
 func (sv *SeriesValidator) ValidateCreate(context echo.Context) (*dto.CreateSeriesDto, error) {
@@ -26,9 +27,15 @@ func (sv *SeriesValidator) ValidateCreate(context echo.Context) (*dto.CreateSeri
 		return nil, err
 	}
 
+	category, categoryErr := sv.Cs.FindUnique("uuid", csDto.CategoryUuid.String())
+	if categoryErr != nil {
+		return nil, utilities.ThrowError(http.StatusNotFound, "CATEGORY_001", fmt.Sprintf("category with uuid %s does not exist", csDto.CategoryUuid.String()))
+	}
+
+	csDto.CategoryID = category.ID
 	csDto.Name = strings.ToLower(csDto.Name)
 	csDto.Author = strings.ToLower(csDto.Author)
-	_, err := sv.Service.FindUnique("name", csDto.Name)
+	_, err := sv.Ss.FindUnique("name", csDto.Name)
 
 	if err != nil {
 		return csDto, nil

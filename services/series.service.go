@@ -27,7 +27,7 @@ func (ss *SeriesService) FindUnique(field string, value string) (models.Series, 
 
 func (ss *SeriesService) Create(csDto *dto.CreateSeriesDto) (*models.Series, error) {
 	slug := "/" + strings.Replace(csDto.Name, " ", "/", -1)
-	series := &models.Series{Name: csDto.Name, Slug: slug, Author: csDto.Author, Description: csDto.Description}
+	series := &models.Series{CategoryID: csDto.CategoryID, Name: csDto.Name, Slug: slug, Author: csDto.Author, Description: csDto.Description}
 	result := ss.DB.Save(series)
 
 	if result.Error != nil {
