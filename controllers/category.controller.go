@@ -31,7 +31,10 @@ func (cc *CategoryController) create(context echo.Context) error {
 		return err
 	}
 
-	category, _ := cc.service.Create(dto)
+	category, createErr := cc.service.Create(dto)
+	if createErr != nil {
+		return err
+	}
 	return context.JSON(http.StatusCreated, category)
 }
 
@@ -41,6 +44,9 @@ func (cc *CategoryController) update(context echo.Context) error {
 		return err
 	}
 
-	updatedCategory, _ := cc.service.Update(category, dto)
+	updatedCategory, updateErr := cc.service.Update(category, dto)
+	if updateErr != nil {
+		return updateErr
+	}
 	return context.JSON(http.StatusOK, updatedCategory)
 }

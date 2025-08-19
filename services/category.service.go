@@ -6,6 +6,7 @@ import (
 	"neon/dto"
 	"neon/models"
 	"neon/utilities"
+	"net/http"
 	"strings"
 
 	"gorm.io/gorm"
@@ -20,7 +21,7 @@ func (cs *CategoryService) FindUnique(field string, value string) (models.Catego
 	result := cs.DB.Where(fmt.Sprintf("%s = ?", field), value).First(&category)
 
 	if errors.Is(result.Error, gorm.ErrRecordNotFound) {
-		return category, fmt.Errorf("category with field %s and value of %s does not exist", field, value)
+		return category, utilities.ThrowError(http.StatusNotFound, "CATEGORY_002", fmt.Sprintf("category with field %s and value of %s does not exist", field, value))
 	}
 
 	return category, nil
@@ -32,7 +33,7 @@ func (cs *CategoryService) Create(ccDto *dto.CreateCategoryDto) (models.Category
 	result := cs.DB.Save(&category)
 
 	if result.Error != nil {
-		return category, errors.New(result.Error.Error())
+		return category, utilities.ThrowError(http.StatusInternalServerError, "INTERNAL_SERVER_ERROR", result.Error.Error())
 	}
 
 	return category, nil
@@ -49,7 +50,7 @@ func (cs *CategoryService) Update(category models.Category, ucDto *dto.UpdateCat
 	result := cs.DB.Save(&category)
 
 	if result.Error != nil {
-		return category, errors.New(result.Error.Error())
+		return category, utilities.ThrowError(http.StatusInternalServerError, "INTERNAL_SERVER_ERROR", result.Error.Error())
 	}
 
 	return category, nil
