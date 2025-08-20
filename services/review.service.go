@@ -42,10 +42,12 @@ func (rs *ReviewService) Create(crDto *dto.CreateReviewDto) (models.Review, erro
 			4,
 		)
 		review = models.Review{
+			Uuid:    crDto.Uuid,
 			Title:   crDto.Title,
 			Slug:    slug,
 			Author:  crDto.Author,
 			Content: crDto.Content,
+			Image:   crDto.Image,
 			Status:  crDto.Status,
 		}
 

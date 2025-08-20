@@ -13,9 +13,9 @@ import (
 )
 
 type ReviewValidator struct {
-	rs *services.ReviewService
-	cs *services.CategoryService
-	ss *services.SeriesService
+	Rs *services.ReviewService
+	Cs *services.CategoryService
+	Ss *services.SeriesService
 }
 
 func (rv *ReviewValidator) ValidateCreate(context echo.Context) (*dto.CreateReviewDto, error) {
@@ -29,8 +29,9 @@ func (rv *ReviewValidator) ValidateCreate(context echo.Context) (*dto.CreateRevi
 	}
 
 	var categories = []models.Category{}
-	for i := 0; i < len(crDto.CategoryUuids); i++ {
-		category, categoryErr := rv.cs.FindUnique("uuid", crDto.CategoryUuids[i].String())
+	categoryUuids := strings.Split(crDto.CategoryUuids, ",")
+	for i := 0; i < len(categoryUuids); i++ {
+		category, categoryErr := rv.Cs.FindUnique("uuid", categoryUuids[i])
 		if categoryErr != nil {
 			return nil, categoryErr
 		}
@@ -39,7 +40,7 @@ func (rv *ReviewValidator) ValidateCreate(context echo.Context) (*dto.CreateRevi
 	crDto.Categories = categories
 
 	if crDto.SeriesUuid != nil {
-		series, seriesErr := rv.ss.FindUnique("uuid", (*crDto.SeriesUuid).String())
+		series, seriesErr := rv.Ss.FindUnique("uuid", (*crDto.SeriesUuid).String())
 		if seriesErr != nil {
 			return nil, seriesErr
 		}
@@ -48,7 +49,7 @@ func (rv *ReviewValidator) ValidateCreate(context echo.Context) (*dto.CreateRevi
 
 	crDto.Title = strings.ToLower(crDto.Title)
 	crDto.Author = strings.ToLower(crDto.Author)
-	_, reviewErr := rv.rs.FindUnique("title", crDto.Title)
+	_, reviewErr := rv.Rs.FindUnique("title", crDto.Title)
 
 	if reviewErr != nil {
 		return crDto, nil

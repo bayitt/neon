@@ -1,8 +1,9 @@
 package utilities
 
 import (
+	"bytes"
 	"net/http"
-	"strings"
+	"unicode"
 
 	"github.com/go-playground/validator/v10"
 	"github.com/labstack/echo/v4"
@@ -24,14 +25,29 @@ type RequestError struct {
 func getErrorMessage(error validator.FieldError) string {
 	switch error.Tag() {
 	case "email":
-		return "A valid email is required."
+		return "a valid email is required."
 	case "required":
-		return "This field is required."
+		return "this field is required."
 	case "min":
-		return "Minimum 8 characters is required."
+		return "minimum 8 characters is required."
 	default:
 		return error.Error()
 	}
+}
+
+func toSnakeCase(s string) string {
+	buf := new(bytes.Buffer)
+	for i, r := range s {
+		if unicode.IsUpper(r) {
+			if i > 0 {
+				buf.WriteRune('_')
+			}
+			buf.WriteRune(unicode.ToLower(r))
+		} else {
+			buf.WriteRune(r)
+		}
+	}
+	return buf.String()
 }
 
 func (requestValidator *RequestValidator) Validate(i interface{}) error {
@@ -41,7 +57,7 @@ func (requestValidator *RequestValidator) Validate(i interface{}) error {
 
 		for index, error := range validationErrors {
 			requestErrors[index] = RequestError{
-				Param:   strings.ToLower(error.Field()),
+				Param:   toSnakeCase(error.Field()),
 				Message: getErrorMessage(error),
 			}
 		}

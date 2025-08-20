@@ -4,7 +4,6 @@ import (
 	"time"
 
 	"github.com/google/uuid"
-	"gorm.io/gorm"
 )
 
 type Review struct {
@@ -21,9 +20,4 @@ type Review struct {
 	CreatedAt  time.Time   `gorm:"not null"                                      json:"created_at"`
 	UpdatedAt  time.Time   `gorm:"not null"                                      json:"-"`
 	Categories []*Category `gorm:"many2many:categories_reviews"                  json:"categories"`
-}
-
-func (review *Review) BeforeCreate(transaction *gorm.DB) (err error) {
-	review.Uuid = uuid.New()
-	return
 }
