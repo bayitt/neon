@@ -40,9 +40,15 @@ func (requestValidator *RequestValidator) Validate(i interface{}) error {
 		requestErrors := make([]RequestError, len(validationErrors))
 
 		for index, error := range validationErrors {
-			requestErrors[index] = RequestError{Param: strings.ToLower(error.Field()), Message: getErrorMessage(error)}
+			requestErrors[index] = RequestError{
+				Param:   strings.ToLower(error.Field()),
+				Message: getErrorMessage(error),
+			}
 		}
-		return echo.NewHTTPError(http.StatusBadRequest, map[string][]RequestError{"errors": requestErrors})
+		return echo.NewHTTPError(
+			http.StatusBadRequest,
+			map[string][]RequestError{"errors": requestErrors},
+		)
 	}
 
 	return nil
