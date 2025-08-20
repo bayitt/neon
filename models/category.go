@@ -14,7 +14,7 @@ type Category struct {
 	Slug      string    `gorm:"unique;type:varchar(255);not null" json:"slug"`
 	CreatedAt time.Time `gorm:"not null" json:"-"`
 	UpdatedAt time.Time `gorm:"not null" json:"-"`
-	Reviews   []*Review `gorm:"many2many:categories_reviews"`
+	Reviews   []*Review `gorm:"many2many:categories_reviews" json:"-"`
 }
 
 func (category *Category) BeforeCreate(transaction *gorm.DB) (err error) {

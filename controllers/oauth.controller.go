@@ -16,7 +16,13 @@ import (
 type OauthController struct {
 }
 
-func (oauthController *OauthController) Redirect(context echo.Context) error {
+func RegisterOauthRoutes(group *echo.Group) {
+	oc := &OauthController{}
+	group.GET("/initiate", oc.redirect)
+	group.GET("/authorize", oc.callbackHandler)
+}
+
+func (oauthController *OauthController) redirect(context echo.Context) error {
 	query := context.Request().URL.Query()
 	query.Add("provider", "google")
 	context.Request().URL.RawQuery = query.Encode()
@@ -34,7 +40,7 @@ func (oauthController *OauthController) Redirect(context echo.Context) error {
 	return nil
 }
 
-func (oauthController *OauthController) CallbackHandler(context echo.Context) error {
+func (oauthController *OauthController) callbackHandler(context echo.Context) error {
 	query := context.Request().URL.Query()
 	query.Add("provider", "google")
 	context.Request().URL.RawQuery = query.Encode()
