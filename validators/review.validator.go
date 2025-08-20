@@ -1,7 +1,9 @@
 package validators
 
 import (
+	"fmt"
 	"neon/dto"
+	"neon/models"
 	"neon/services"
 	"neon/utilities"
 	"net/http"
@@ -26,20 +28,35 @@ func (rv *ReviewValidator) ValidateCreate(context echo.Context) (*dto.CreateRevi
 		return nil, err
 	}
 
-	category, categoryErr := rv.cs.FindUnique("uuid", crDto.CategoryUuid.String())
-	if categoryErr != nil {
-		return nil, categoryErr
+	var categories = []models.Category{}
+	for i := 0; i < len(crDto.CategoryUuids); i++ {
+		category, categoryErr := rv.cs.FindUnique("uuid", crDto.CategoryUuids[i].String())
+		if categoryErr != nil {
+			return nil, categoryErr
+		}
+		categories = append(categories, category)
 	}
-	crDto.CategoryID = category.ID
+	crDto.Categories = categories
 
 	if crDto.SeriesUuid != nil {
 		series, seriesErr := rv.ss.FindUnique("uuid", (*crDto.SeriesUuid).String())
 		if seriesErr != nil {
 			return nil, seriesErr
 		}
-		crDto.SeriesID = &series.ID
+		crDto.Series = &series
 	}
 
 	crDto.Title = strings.ToLower(crDto.Title)
-	return nil, categoryErr
+	crDto.Author = strings.ToLower(crDto.Author)
+	_, reviewErr := rv.rs.FindUnique("title", crDto.Title)
+
+	if reviewErr != nil {
+		return crDto, nil
+	}
+
+	return nil, utilities.ThrowError(
+		http.StatusBadRequest,
+		"REVIEW_001",
+		fmt.Sprintf("review with the title %s exists already", crDto.Title),
+	)
 }
