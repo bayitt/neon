@@ -40,26 +40,26 @@ func (ss *SeriesService) Create(csDto *dto.CreateSeriesDto) (models.Series, erro
 }
 
 func (ss *SeriesService) Update(series models.Series, usDto *dto.UpdateSeriesDto) (models.Series, error) {
-	updateValue := func(initialValue string, newValue string) string {
-		if len(newValue) > 0 {
-			return newValue
+	updateValue := func(initialValue string, newValuePointer *string) string {
+		if newValuePointer != nil && len(*newValuePointer) > 0 {
+			return strings.ToLower(*newValuePointer)
 		}
 		return initialValue
 	}
 
-	updateDescription := func(initialDescription string, newDescription string) *string {
-		if len(newDescription) > 0 {
-			return &newDescription
+	updateDescription := func(initialDescriptionPointer *string, newDescriptionPointer *string) *string {
+		if newDescriptionPointer != nil && len(*newDescriptionPointer) > 0 {
+			return newDescriptionPointer
 		}
-		return &initialDescription
+		return initialDescriptionPointer
 	}
 
-	if series.Name != *usDto.Name {
-		series.Slug = "/" + strings.Replace(*usDto.Name, " ", "-", -1) + "-" + utilities.GenerateRandomString(4)
+	if usDto.Name != nil && series.Name != strings.ToLower(*usDto.Name) {
+		series.Slug = "/" + strings.Replace(strings.ToLower(*usDto.Name), " ", "-", -1) + "-" + utilities.GenerateRandomString(4)
 	}
-	series.Name = updateValue(series.Name, *usDto.Name)
-	series.Author = updateValue(series.Author, *usDto.Author)
-	series.Description = updateDescription(*series.Description, *usDto.Description)
+	series.Name = updateValue(series.Name, usDto.Name)
+	series.Author = updateValue(series.Author, usDto.Author)
+	series.Description = updateDescription(series.Description, usDto.Description)
 	result := ss.DB.Save(&series)
 
 	if result.Error != nil {

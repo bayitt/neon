@@ -53,7 +53,7 @@ func (sv *SeriesValidator) ValidateUpdate(context echo.Context) (models.Series, 
 		return models.Series{}, nil, utilities.ThrowError(http.StatusNotFound, "SERIES_002", fmt.Sprintf("series with uuid %s does not exist", usDto.SeriesUuid.String()))
 	}
 
-	if len(*usDto.Name) > 0 {
+	if usDto.Name != nil && len(*usDto.Name) > 0 {
 		namedSeries, err := sv.Service.FindUnique("name", *usDto.Name)
 		if err == nil && namedSeries.Uuid.String() != usDto.SeriesUuid.String() {
 			return models.Series{}, nil, utilities.ThrowError(http.StatusBadRequest, "SERIES_001", fmt.Sprintf("series with name %s exists already", *usDto.Name))
