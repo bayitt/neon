@@ -126,3 +126,21 @@ func (rv *ReviewValidator) ValidateUpdate(
 
 	return review, urDto, nil
 }
+
+func (rv *ReviewValidator) ValidateGet(context echo.Context) (models.Review, error) {
+	grDto := new(dto.GetReviewDto)
+	if err := context.Bind(grDto); err != nil {
+		return models.Review{}, utilities.ThrowError(
+			http.StatusBadRequest,
+			"MALFORMED_REQUEST",
+			err.Error(),
+		)
+	}
+
+	review, err := rv.Rs.FindUnique("uuid", grDto.Uuid.String(), true)
+	if err != nil {
+		return models.Review{}, err
+	}
+
+	return review, nil
+}

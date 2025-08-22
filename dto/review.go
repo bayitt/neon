@@ -33,3 +33,7 @@ type UpdateReviewDto struct {
 	Categories *[]models.Category
 	Series     *models.Series
 }
+
+type GetReviewDto struct {
+	Uuid uuid.UUID `param:"uuid"`
+}

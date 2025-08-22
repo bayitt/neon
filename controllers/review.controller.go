@@ -37,6 +37,9 @@ func RegisterReviewRoutes(group *echo.Group) {
 	updateReviewGroup := group.Group("/:uuid")
 	updateReviewGroup.Use(middleware.AuthMiddleware)
 	updateReviewGroup.PUT("", rc.update)
+
+	getReviewGroup := group.Group("/:uuid")
+	getReviewGroup.GET("", rc.get)
 }
 
 func uploadImage(image *multipart.FileHeader, uuid string) (string, error) {
@@ -130,4 +133,13 @@ func (rc *ReviewController) update(context echo.Context) error {
 		return updateErr
 	}
 	return context.JSON(http.StatusOK, updatedReview)
+}
+
+func (rc *ReviewController) get(context echo.Context) error {
+	review, err := rc.validator.ValidateGet(context)
+	if err != nil {
+		return err
+	}
+
+	return context.JSON(http.StatusOK, review)
 }
