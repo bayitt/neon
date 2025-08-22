@@ -19,3 +19,17 @@ type CreateReviewDto struct {
 	Categories []models.Category
 	Series     *models.Series
 }
+
+type UpdateReviewDto struct {
+	Uuid          uuid.UUID  `param:"uuid"`
+	CategoryUuids *string    `             form:"category_uuids"`
+	SeriesUuid    *uuid.UUID `             form:"series_uuid"`
+	Title         *string    `             form:"title"`
+	Author        *string    `             form:"author"`
+	Content       *string    `             form:"content"`
+	Status        *uint      `             form:"status"`
+
+	Image      *string
+	Categories *[]models.Category
+	Series     *models.Series
+}

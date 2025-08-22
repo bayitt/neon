@@ -49,7 +49,7 @@ func (rv *ReviewValidator) ValidateCreate(context echo.Context) (*dto.CreateRevi
 
 	crDto.Title = strings.ToLower(crDto.Title)
 	crDto.Author = strings.ToLower(crDto.Author)
-	_, reviewErr := rv.Rs.FindUnique("title", crDto.Title)
+	_, reviewErr := rv.Rs.FindUnique("title", crDto.Title, false)
 
 	if reviewErr != nil {
 		return crDto, nil
@@ -60,4 +60,60 @@ func (rv *ReviewValidator) ValidateCreate(context echo.Context) (*dto.CreateRevi
 		"REVIEW_001",
 		fmt.Sprintf("review with the title %s exists already", crDto.Title),
 	)
+}
+
+func (rv *ReviewValidator) ValidateUpdate(
+	context echo.Context,
+) (models.Review, *dto.UpdateReviewDto, error) {
+	urDto := new(dto.UpdateReviewDto)
+	if err := context.Bind(urDto); err != nil {
+		return models.Review{}, nil, utilities.ThrowError(
+			http.StatusBadRequest,
+			"MALFORMED_REQUEST",
+			err.Error(),
+		)
+	}
+
+	if err := context.Validate(urDto); err != nil {
+		return models.Review{}, nil, err
+	}
+
+	review, reviewErr := rv.Rs.FindUnique("uuid", urDto.Uuid.String(), false)
+	if reviewErr != nil {
+		return models.Review{}, nil, reviewErr
+	}
+
+	if urDto.Title != nil {
+		parsedTitle := strings.ToLower(*urDto.Title)
+		urDto.Title = &parsedTitle
+	}
+
+	if urDto.Author != nil {
+		parsedAuthor := strings.ToLower(*urDto.Author)
+		urDto.Author = &parsedAuthor
+	}
+
+	if urDto.CategoryUuids != nil {
+		categoryUuids := strings.Split(*urDto.CategoryUuids, ",")
+		var categories = []models.Category{}
+
+		for i := 0; i < len(categoryUuids); i++ {
+			category, categoryErr := rv.Cs.FindUnique("uuid", categoryUuids[i])
+			if categoryErr != nil {
+				return models.Review{}, nil, categoryErr
+			}
+			categories = append(categories, category)
+			urDto.Categories = &categories
+		}
+	}
+
+	if urDto.SeriesUuid != nil {
+		series, seriesErr := rv.Ss.FindUnique("uuid", (*urDto.SeriesUuid).String())
+		if seriesErr != nil {
+			return models.Review{}, nil, seriesErr
+		}
+		urDto.Series = &series
+	}
+
+	return review, urDto, nil
 }

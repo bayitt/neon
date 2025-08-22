@@ -7,18 +7,32 @@ import (
 	"neon/models"
 	"neon/utilities"
 	"net/http"
+	"slices"
 	"strings"
 
 	"gorm.io/gorm"
+	"gorm.io/gorm/clause"
 )
 
 type ReviewService struct {
 	DB *gorm.DB
 }
 
-func (rs *ReviewService) FindUnique(field string, value string) (models.Review, error) {
+func (rs *ReviewService) FindUnique(
+	field string,
+	value string,
+	preload bool,
+) (models.Review, error) {
 	var review models.Review
-	result := rs.DB.Where(fmt.Sprintf("%s = ?", field), value).First(&review)
+	var result *gorm.DB
+
+	if preload {
+		result = rs.DB.Preload(clause.Associations).
+			Where(fmt.Sprintf("%s = ?", field), value).
+			First(&review)
+	} else {
+		result = rs.DB.Where(fmt.Sprintf("%s = ?", field), value).First(&review)
+	}
 
 	if errors.Is(result.Error, gorm.ErrRecordNotFound) {
 		return models.Review{}, utilities.ThrowError(
@@ -64,12 +78,20 @@ func (rs *ReviewService) Create(crDto *dto.CreateReviewDto) (models.Review, erro
 			)
 		}
 
-		associateError := tx.Model(&review).Association("Categories").Append(crDto.Categories)
-		if associateError != nil {
+		var reviewCategories []models.CategoryReview
+		for i := 0; i < len(crDto.Categories); i++ {
+			reviewCategories = append(
+				reviewCategories,
+				models.CategoryReview{CategoryID: crDto.Categories[i].ID, ReviewID: review.ID},
+			)
+		}
+
+		associateResult := tx.Create(&reviewCategories)
+		if associateResult.Error != nil {
 			return utilities.ThrowError(
 				http.StatusInternalServerError,
 				"INTERNAL_SERVER_ERROR",
-				associateError.Error(),
+				associateResult.Error.Error(),
 			)
 		}
 
@@ -87,5 +109,112 @@ func (rs *ReviewService) Create(crDto *dto.CreateReviewDto) (models.Review, erro
 	review.Categories = categories
 	review.Series = crDto.Series
 
+	return review, nil
+}
+
+func (rs *ReviewService) Update(
+	review models.Review,
+	urDto *dto.UpdateReviewDto,
+) (models.Review, error) {
+	updateStringField := func(initialValue string, newValuePointer *string) string {
+		if newValuePointer != nil {
+			return *newValuePointer
+		}
+
+		return initialValue
+	}
+
+	err := rs.DB.Transaction(func(tx *gorm.DB) error {
+		if urDto.Title != nil && (review.Title != *urDto.Title) {
+			review.Slug = "/" + strings.Replace(
+				*urDto.Title,
+				" ",
+				"-",
+				-1,
+			) + "-" + utilities.GenerateRandomString(
+				4,
+			)
+		}
+
+		if urDto.Image != nil && *review.Image != *urDto.Image {
+			review.Image = urDto.Image
+		}
+
+		if urDto.Series != nil && *review.SeriesID != (*urDto.Series).ID {
+			review.SeriesID = &(*urDto.Series).ID
+		}
+
+		if urDto.Status != nil && review.Status != *urDto.Status {
+			review.Status = *urDto.Status
+		}
+
+		review.Title = updateStringField(review.Title, urDto.Title)
+		review.Author = updateStringField(review.Author, urDto.Author)
+		review.Content = updateStringField(review.Content, urDto.Content)
+
+		result := tx.Save(&review)
+		if result.Error != nil {
+			return utilities.ThrowError(
+				http.StatusInternalServerError,
+				"INTERNAL_SERVER_ERROR",
+				result.Error.Error(),
+			)
+		}
+
+		if urDto.Categories != nil {
+			var reviewCategories []models.CategoryReview
+			tx.Model(review).Association("Categories").Find(&reviewCategories)
+
+			var isCategoriesChanged bool
+
+			for _, category := range *urDto.Categories {
+				index := slices.IndexFunc(
+					reviewCategories,
+					func(cat models.CategoryReview) bool { return cat.CategoryID == category.ID },
+				)
+
+				if index == -1 {
+					isCategoriesChanged = true
+					break
+				}
+			}
+
+			if isCategoriesChanged {
+				tx.Delete(&reviewCategories)
+				var reviewCategories []models.CategoryReview
+				for i := 0; i < len(*urDto.Categories); i++ {
+					reviewCategories = append(
+						reviewCategories,
+						models.CategoryReview{
+							CategoryID: (*urDto.Categories)[i].ID,
+							ReviewID:   review.ID,
+						},
+					)
+				}
+
+				associateResult := tx.Create(&reviewCategories)
+				if associateResult.Error != nil {
+					return utilities.ThrowError(
+						http.StatusInternalServerError,
+						"INTERNAL_SERVER_ERROR",
+						associateResult.Error.Error(),
+					)
+				}
+			}
+		}
+
+		return nil
+	})
+
+	if err != nil {
+		return models.Review{}, err
+	}
+
+	var series, categories = models.Series{}, []*models.Category{}
+	rs.DB.Model(review).Association("Series").Find(&series)
+	rs.DB.Model(review).Association("Categories").Find(&categories)
+
+	review.Series = &series
+	review.Categories = categories
 	return review, nil
 }

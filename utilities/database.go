@@ -41,6 +41,7 @@ func GetDatabaseObject() *gorm.DB {
 
 func InitDatabase() {
 	database := GetDatabaseObject()
+	database.SetupJoinTable(&models.Category{}, "Reviews", &models.CategoryReview{})
 	database.AutoMigrate(
 		&models.Category{},
 		&models.Series{},
