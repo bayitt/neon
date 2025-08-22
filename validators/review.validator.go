@@ -86,6 +86,15 @@ func (rv *ReviewValidator) ValidateUpdate(
 	if urDto.Title != nil {
 		parsedTitle := strings.ToLower(*urDto.Title)
 		urDto.Title = &parsedTitle
+
+		namedReview, reviewErr := rv.Rs.FindUnique("title", *urDto.Title, false)
+		if reviewErr == nil && namedReview.Uuid.String() != review.Uuid.String() {
+			return models.Review{}, nil, utilities.ThrowError(
+				http.StatusBadRequest,
+				"REVIEW_001",
+				fmt.Sprintf("review with title %s already exists", *urDto.Title),
+			)
+		}
 	}
 
 	if urDto.Author != nil {

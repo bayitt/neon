@@ -55,6 +55,14 @@ func (rs *ReviewService) Create(crDto *dto.CreateReviewDto) (models.Review, erro
 		) + "-" + utilities.GenerateRandomString(
 			4,
 		)
+		var status uint
+
+		if crDto.Status {
+			status = 1
+		} else {
+			status = 0
+		}
+
 		review = models.Review{
 			Uuid:    crDto.Uuid,
 			Title:   crDto.Title,
@@ -62,7 +70,7 @@ func (rs *ReviewService) Create(crDto *dto.CreateReviewDto) (models.Review, erro
 			Author:  crDto.Author,
 			Content: crDto.Content,
 			Image:   crDto.Image,
-			Status:  crDto.Status,
+			Status:  status,
 		}
 
 		if crDto.Series != nil {
@@ -136,16 +144,20 @@ func (rs *ReviewService) Update(
 			)
 		}
 
-		if urDto.Image != nil && *review.Image != *urDto.Image {
+		if urDto.Image != nil {
 			review.Image = urDto.Image
 		}
 
-		if urDto.Series != nil && *review.SeriesID != (*urDto.Series).ID {
+		if urDto.Series != nil {
 			review.SeriesID = &(*urDto.Series).ID
 		}
 
-		if urDto.Status != nil && review.Status != *urDto.Status {
-			review.Status = *urDto.Status
+		if urDto.Status != nil {
+			if *urDto.Status {
+				review.Status = 1
+			} else {
+				review.Status = 0
+			}
 		}
 
 		review.Title = updateStringField(review.Title, urDto.Title)
@@ -162,7 +174,7 @@ func (rs *ReviewService) Update(
 		}
 
 		if urDto.Categories != nil {
-			var reviewCategories []models.CategoryReview
+			var reviewCategories []models.Category
 			tx.Model(review).Association("Categories").Find(&reviewCategories)
 
 			var isCategoriesChanged bool
@@ -170,7 +182,7 @@ func (rs *ReviewService) Update(
 			for _, category := range *urDto.Categories {
 				index := slices.IndexFunc(
 					reviewCategories,
-					func(cat models.CategoryReview) bool { return cat.CategoryID == category.ID },
+					func(cat models.Category) bool { return cat.ID == category.ID },
 				)
 
 				if index == -1 {
@@ -180,7 +192,7 @@ func (rs *ReviewService) Update(
 			}
 
 			if isCategoriesChanged {
-				tx.Delete(&reviewCategories)
+				tx.Model(&review).Association("Categories").Clear()
 				var reviewCategories []models.CategoryReview
 				for i := 0; i < len(*urDto.Categories); i++ {
 					reviewCategories = append(
@@ -214,7 +226,9 @@ func (rs *ReviewService) Update(
 	rs.DB.Model(review).Association("Series").Find(&series)
 	rs.DB.Model(review).Association("Categories").Find(&categories)
 
-	review.Series = &series
+	if len(series.Name) > 0 {
+		review.Series = &series
+	}
 	review.Categories = categories
 	return review, nil
 }

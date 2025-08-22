@@ -12,7 +12,7 @@ type CreateReviewDto struct {
 	Title         string     `form:"title"          validate:"required"`
 	Author        string     `form:"author"         validate:"required"`
 	Content       string     `form:"content"        validate:"required"`
-	Status        uint       `form:"status"`
+	Status        bool       `form:"status"`
 
 	Uuid       uuid.UUID
 	Image      *string
@@ -27,7 +27,7 @@ type UpdateReviewDto struct {
 	Title         *string    `             form:"title"`
 	Author        *string    `             form:"author"`
 	Content       *string    `             form:"content"`
-	Status        *uint      `             form:"status"`
+	Status        *bool      `             form:"status"`
 
 	Image      *string
 	Categories *[]models.Category
