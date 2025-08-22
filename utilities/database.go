@@ -18,7 +18,14 @@ func GetDatabaseObject() *gorm.DB {
 		return database
 	}
 
-	dsn := fmt.Sprintf("host=%s user=%s password=%s dbname=%s port=%s sslmode=disable Timezone=GMT", os.Getenv("DATABASE_HOST"), os.Getenv("DATABASE_USER"), os.Getenv("DATABASE_PASSWORD"), os.Getenv("DATABASE_NAME"), os.Getenv("DATABASE_PORT"))
+	dsn := fmt.Sprintf(
+		"host=%s user=%s password=%s dbname=%s port=%s sslmode=disable Timezone=GMT",
+		os.Getenv("DATABASE_HOST"),
+		os.Getenv("DATABASE_USER"),
+		os.Getenv("DATABASE_PASSWORD"),
+		os.Getenv("DATABASE_NAME"),
+		os.Getenv("DATABASE_PORT"),
+	)
 	db, err := gorm.Open(postgres.Open(dsn), &gorm.Config{
 		Logger: logger.Default.LogMode(logger.Silent),
 	})
@@ -34,5 +41,11 @@ func GetDatabaseObject() *gorm.DB {
 
 func InitDatabase() {
 	database := GetDatabaseObject()
-	database.AutoMigrate(&models.Category{}, &models.Series{}, &models.Review{}, &models.Subscriber{})
+	database.SetupJoinTable(&models.Category{}, "Reviews", &models.CategoryReview{})
+	database.AutoMigrate(
+		&models.Category{},
+		&models.Series{},
+		&models.Review{},
+		&models.Subscriber{},
+	)
 }

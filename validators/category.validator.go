@@ -33,14 +33,24 @@ func (cv *CategoryValidator) ValidateCreate(context echo.Context) (*dto.CreateCa
 	if err != nil {
 		return ccDto, nil
 	}
-	return nil, utilities.ThrowError(http.StatusBadRequest, "CATEGORY_001", fmt.Sprintf("category with name %s already exists", ccDto.Name))
+	return nil, utilities.ThrowError(
+		http.StatusBadRequest,
+		"CATEGORY_001",
+		fmt.Sprintf("category with name %s already exists", ccDto.Name),
+	)
 }
 
-func (cv *CategoryValidator) ValidateUpdate(context echo.Context) (models.Category, *dto.UpdateCategoryDto, error) {
+func (cv *CategoryValidator) ValidateUpdate(
+	context echo.Context,
+) (models.Category, *dto.UpdateCategoryDto, error) {
 	ucDto := new(dto.UpdateCategoryDto)
 
 	if err := context.Bind(ucDto); err != nil {
-		return models.Category{}, nil, utilities.ThrowError(http.StatusBadRequest, "MALFORMED_REQUEST", err.Error())
+		return models.Category{}, nil, utilities.ThrowError(
+			http.StatusBadRequest,
+			"MALFORMED_REQUEST",
+			err.Error(),
+		)
 	}
 
 	if err := context.Validate(ucDto); err != nil {
@@ -49,12 +59,20 @@ func (cv *CategoryValidator) ValidateUpdate(context echo.Context) (models.Catego
 
 	category, err := cv.Service.FindUnique("uuid", ucDto.Uuid.String())
 	if err != nil {
-		return models.Category{}, nil, utilities.ThrowError(http.StatusNotFound, "CATEGORY_002", fmt.Sprintf("category with uuid %s does not exist", ucDto.Uuid))
+		return models.Category{}, nil, utilities.ThrowError(
+			http.StatusNotFound,
+			"CATEGORY_002",
+			fmt.Sprintf("category with uuid %s does not exist", ucDto.Uuid),
+		)
 	}
 
 	namedCategory, nameErr := cv.Service.FindUnique("name", ucDto.Name)
 	if nameErr == nil && namedCategory.Uuid.String() != category.Uuid.String() {
-		return models.Category{}, nil, utilities.ThrowError(http.StatusBadRequest, "CATEGORY_001", fmt.Sprintf("category with name %s already exists", ucDto.Name))
+		return models.Category{}, nil, utilities.ThrowError(
+			http.StatusBadRequest,
+			"CATEGORY_001",
+			fmt.Sprintf("category with name %s already exists", ucDto.Name),
+		)
 	}
 
 	return category, ucDto, nil

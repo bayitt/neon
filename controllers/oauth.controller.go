@@ -53,11 +53,19 @@ func (oauthController *OauthController) callbackHandler(context echo.Context) er
 
 	if err != nil {
 		fmt.Println(err)
-		return utilities.ThrowError(http.StatusInternalServerError, "AUTH_003", "There was a problem retrieving user information from google")
+		return utilities.ThrowError(
+			http.StatusInternalServerError,
+			"AUTH_003",
+			"There was a problem retrieving user information from google",
+		)
 	}
 
 	if strings.ToLower(user.Email) != os.Getenv("ADMIN_EMAIL") {
-		return utilities.ThrowError(http.StatusBadRequest, "AUTH_001", "Login attempt made by an unauthorized user")
+		return utilities.ThrowError(
+			http.StatusBadRequest,
+			"AUTH_001",
+			"Login attempt made by an unauthorized user",
+		)
 	}
 
 	secretKey := []byte(os.Getenv("JWT_SECRET"))
@@ -71,7 +79,11 @@ func (oauthController *OauthController) callbackHandler(context echo.Context) er
 	token, err := claims.SignedString(secretKey)
 
 	if err != nil {
-		return utilities.ThrowError(http.StatusInternalServerError, "INTERNAL_SERVER_ERROR", "There was a problem generating the auth token")
+		return utilities.ThrowError(
+			http.StatusInternalServerError,
+			"INTERNAL_SERVER_ERROR",
+			"There was a problem generating the auth token",
+		)
 	}
 
 	tokenCookie := new(http.Cookie)
