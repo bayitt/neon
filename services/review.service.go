@@ -3,6 +3,7 @@ package services
 import (
 	"errors"
 	"fmt"
+	"maps"
 	"neon/dto"
 	"neon/models"
 	"neon/utilities"
@@ -42,6 +43,50 @@ func (rs *ReviewService) FindUnique(
 		)
 	}
 	return review, nil
+}
+
+func (rs *ReviewService) Find(
+	offset int,
+	count int,
+	where map[string]int,
+) ([]models.Review, error) {
+	var reviews []models.Review
+	var result *gorm.DB
+
+	if len(where) > 0 {
+		mapKeys := slices.Collect(maps.Keys(where))
+		mapValues := slices.Collect(maps.Values(where))
+		result = rs.DB.Where(fmt.Sprintf("%s = ?", mapKeys[0]), mapValues[0]).
+			Offset(offset).
+			Limit(count).Find(&reviews).Preload(clause.Associations)
+	} else {
+		result = rs.DB.Offset(offset).Limit(count).Preload(clause.Associations).Find(&reviews)
+	}
+
+	if result.Error != nil {
+		return []models.Review{}, utilities.ThrowError(
+			http.StatusInternalServerError,
+			"INTERNAL_SERVER_ERROR",
+			result.Error.Error(),
+		)
+	}
+
+	return reviews, nil
+}
+
+func (rs *ReviewService) Count(where map[string]int) int64 {
+	var totalReviews int64
+	if len(where) > 0 {
+		mapKeys := slices.Collect(maps.Keys(where))
+		mapValues := slices.Collect(maps.Keys(where))
+		rs.DB.Model(models.Review{}).
+			Where(fmt.Sprintf("%s = ?", mapKeys[0]), mapValues[0]).
+			Count(&totalReviews)
+	} else {
+		rs.DB.Model(models.Review{}).Count(&totalReviews)
+	}
+
+	return totalReviews
 }
 
 func (rs *ReviewService) Create(crDto *dto.CreateReviewDto) (models.Review, error) {

@@ -144,3 +144,12 @@ func (rv *ReviewValidator) ValidateGet(context echo.Context) (models.Review, err
 
 	return review, nil
 }
+
+func (rv *ReviewValidator) ValidateGetMultiple(context echo.Context) (*dto.GetReviewsDto, error) {
+	grDto := new(dto.GetReviewsDto)
+	if err := context.Bind(grDto); err != nil {
+		return nil, utilities.ThrowError(http.StatusBadRequest, "MALFORMED_REQUEST", err.Error())
+	}
+
+	return grDto, nil
+}

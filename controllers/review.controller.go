@@ -38,8 +38,8 @@ func RegisterReviewRoutes(group *echo.Group) {
 	updateReviewGroup.Use(middleware.AuthMiddleware)
 	updateReviewGroup.PUT("", rc.update)
 
-	getReviewGroup := group.Group("/:uuid")
-	getReviewGroup.GET("", rc.get)
+	group.GET("/:uuid", rc.get)
+	group.GET("", rc.getAll)
 }
 
 func uploadImage(image *multipart.FileHeader, uuid string) (string, error) {
@@ -142,4 +142,30 @@ func (rc *ReviewController) get(context echo.Context) error {
 	}
 
 	return context.JSON(http.StatusOK, review)
+}
+
+func (rc *ReviewController) getAll(context echo.Context) error {
+	grDto, err := rc.validator.ValidateGetMultiple(context)
+	if err != nil {
+		return err
+	}
+
+	offset := (grDto.Page - 1) * grDto.Count
+	reviews, getErr := rc.service.Find(int(offset), int(grDto.Count), map[string]int{})
+	if getErr != nil {
+		return getErr
+	}
+
+	totalReviews := rc.service.Count(map[string]int{})
+	totalPages := totalReviews / int64(grDto.Count)
+	return context.JSON(
+		http.StatusOK,
+		map[string]interface{}{
+			"reviews": reviews,
+			"pagination": map[string]int{
+				"currentPage": int(grDto.Page),
+				"totalPages":  int(totalPages),
+			},
+		},
+	)
 }
