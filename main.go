@@ -27,6 +27,7 @@ func main() {
 	controllers.RegisterOauthRoutes(app.Group("/login"))
 	controllers.RegisterCategoryRoutes(app.Group("/categories"))
 	controllers.RegisterSeriesRoutes(app.Group("/series"))
+	controllers.RegisterSubscriberRoutes(app.Group("/subscribers"))
 	controllers.RegisterReviewRoutes(app)
 
 	app.Logger.Fatal(app.Start(fmt.Sprintf(":%s", os.Getenv("APP_PORT"))))
