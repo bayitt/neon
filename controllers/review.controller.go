@@ -43,6 +43,7 @@ func RegisterReviewRoutes(app *echo.Echo) {
 	updateReviewGroup.PUT("", rc.update)
 
 	app.GET("/categories/:category_uuid/reviews", rc.getByCategory)
+	app.GET("/series/:series_uuid/reviews", rc.getBySeries)
 	app.GET("/reviews/:uuid", rc.get)
 	app.GET("/reviews", rc.getAll)
 }
@@ -223,4 +224,18 @@ func (rc *ReviewController) getByCategory(context echo.Context) error {
 			"pagination": map[string]uint{"currentPage": grbcDto.Page, "lastPage": totalPages},
 		},
 	)
+}
+
+func (rc *ReviewController) getBySeries(context echo.Context) error {
+	grbsDto, err := rc.validator.ValidateGetBySeries(context)
+	if err != nil {
+		return err
+	}
+
+	reviews, reviewsErr := rc.service.Find(0, 15, map[string]uint{"series_id": grbsDto.Series.ID})
+	if reviewsErr != nil {
+		return err
+	}
+
+	return context.JSON(http.StatusOK, parseReviews(context, reviews))
 }

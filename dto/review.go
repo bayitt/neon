@@ -49,3 +49,9 @@ type GetReviewsByCategoryDto struct {
 
 	Category models.Category
 }
+
+type GetReviewsBySeriesDto struct {
+	SeriesUuid uuid.UUID `param:"series_uuid"`
+
+	Series models.Series
+}

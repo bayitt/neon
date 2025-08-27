@@ -60,8 +60,9 @@ func (rs *ReviewService) Find(
 			Where(fmt.Sprintf("%s = ?", mapKeys[0]), mapValues[0]).
 			Order("created_at desc").
 			Offset(int(offset)).
-			Limit(int(count)).Find(&reviews).
-			Preload(clause.Associations)
+			Limit(int(count)).
+			Preload(clause.Associations).
+			Find(&reviews)
 	} else {
 		result = rs.DB.
 			Order("created_at desc").
@@ -87,12 +88,16 @@ func (rs *ReviewService) FindCategoryReviews(
 	offset uint,
 	count uint,
 ) ([]models.Review, error) {
-	var categoryReviews, reviewIds, reviews = []models.CategoryReview{}, []uint{}, []models.Review{}
+	var categoryReviews, reviewIds, reviews = []models.CategoryReview{},
+		[]uint{},
+		[]models.Review{}
+
 	result := rs.DB.
 		Where("category_id = ?", category.ID).
 		Order("created_at desc").
 		Offset(int(offset)).
-		Limit(int(count)).Find(&categoryReviews)
+		Limit(int(count)).
+		Find(&categoryReviews)
 
 	if result.Error != nil {
 		return []models.Review{}, utilities.ThrowError(
@@ -106,7 +111,11 @@ func (rs *ReviewService) FindCategoryReviews(
 		reviewIds = append(reviewIds, categoryReview.ReviewID)
 	}
 
-	reviewResult := rs.DB.Order("created_at desc").Where(reviewIds).Find(&reviews)
+	reviewResult := rs.DB.
+		Where(reviewIds).
+		Order("created_at desc").
+		Preload(clause.Associations).
+		Find(&reviews)
 	if reviewResult.Error != nil {
 		return []models.Review{}, utilities.ThrowError(
 			http.StatusInternalServerError,

@@ -186,3 +186,20 @@ func (rv *ReviewValidator) ValidateGetByCategory(
 	grbcDto.Category = category
 	return grbcDto, nil
 }
+
+func (rv *ReviewValidator) ValidateGetBySeries(
+	context echo.Context,
+) (*dto.GetReviewsBySeriesDto, error) {
+	grbsDto := new(dto.GetReviewsBySeriesDto)
+	if err := context.Bind(grbsDto); err != nil {
+		return nil, utilities.ThrowError(http.StatusBadRequest, "MALFORMED_REQUEST", err.Error())
+	}
+
+	series, seriesErr := rv.Ss.FindUnique("uuid", grbsDto.SeriesUuid.String())
+	if seriesErr != nil {
+		return nil, seriesErr
+	}
+
+	grbsDto.Series = series
+	return grbsDto, nil
+}
