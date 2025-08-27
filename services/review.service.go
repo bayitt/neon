@@ -3,6 +3,7 @@ package services
 import (
 	"errors"
 	"fmt"
+	"maps"
 	"neon/dto"
 	"neon/models"
 	"neon/utilities"
@@ -42,6 +43,108 @@ func (rs *ReviewService) FindUnique(
 		)
 	}
 	return review, nil
+}
+
+func (rs *ReviewService) Find(
+	offset uint,
+	count uint,
+	where map[string]uint,
+) ([]models.Review, error) {
+	var reviews []models.Review
+	var result *gorm.DB
+
+	if len(where) > 0 {
+		mapKeys := slices.Collect(maps.Keys(where))
+		mapValues := slices.Collect(maps.Values(where))
+		result = rs.DB.
+			Where(fmt.Sprintf("%s = ?", mapKeys[0]), mapValues[0]).
+			Order("created_at desc").
+			Offset(int(offset)).
+			Limit(int(count)).
+			Preload(clause.Associations).
+			Find(&reviews)
+	} else {
+		result = rs.DB.
+			Order("created_at desc").
+			Offset(int(offset)).
+			Limit(int(count)).
+			Preload(clause.Associations).
+			Find(&reviews)
+	}
+
+	if result.Error != nil {
+		return []models.Review{}, utilities.ThrowError(
+			http.StatusInternalServerError,
+			"INTERNAL_SERVER_ERROR",
+			result.Error.Error(),
+		)
+	}
+
+	return reviews, nil
+}
+
+func (rs *ReviewService) FindCategoryReviews(
+	category models.Category,
+	offset uint,
+	count uint,
+) ([]models.Review, error) {
+	var categoryReviews, reviewIds, reviews = []models.CategoryReview{},
+		[]uint{},
+		[]models.Review{}
+
+	result := rs.DB.
+		Where("category_id = ?", category.ID).
+		Order("created_at desc").
+		Offset(int(offset)).
+		Limit(int(count)).
+		Find(&categoryReviews)
+
+	if result.Error != nil {
+		return []models.Review{}, utilities.ThrowError(
+			http.StatusInternalServerError,
+			"INTERNAL_SERVER_ERROR",
+			result.Error.Error(),
+		)
+	}
+
+	for _, categoryReview := range categoryReviews {
+		reviewIds = append(reviewIds, categoryReview.ReviewID)
+	}
+
+	reviewResult := rs.DB.
+		Where(reviewIds).
+		Order("created_at desc").
+		Preload(clause.Associations).
+		Find(&reviews)
+	if reviewResult.Error != nil {
+		return []models.Review{}, utilities.ThrowError(
+			http.StatusInternalServerError,
+			"INTERNAL_SERVER_ERROR",
+			reviewResult.Error.Error(),
+		)
+	}
+
+	return reviews, nil
+}
+
+func (rs *ReviewService) Count(where map[string]uint) uint {
+	var totalReviews int64
+	if len(where) > 0 {
+		mapKeys := slices.Collect(maps.Keys(where))
+		mapValues := slices.Collect(maps.Keys(where))
+		rs.DB.Model(models.Review{}).
+			Where(fmt.Sprintf("%s = ?", mapKeys[0]), mapValues[0]).
+			Count(&totalReviews)
+	} else {
+		rs.DB.Model(models.Review{}).Count(&totalReviews)
+	}
+
+	return uint(totalReviews)
+}
+
+func (rs *ReviewService) CountCategoryReviews(category models.Category) uint {
+	totalCategoryReviews := rs.DB.Model(&category).Association("Reviews").Count()
+	return uint(totalCategoryReviews)
 }
 
 func (rs *ReviewService) Create(crDto *dto.CreateReviewDto) (models.Review, error) {

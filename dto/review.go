@@ -33,3 +33,25 @@ type UpdateReviewDto struct {
 	Categories *[]models.Category
 	Series     *models.Series
 }
+
+type GetReviewDto struct {
+	Uuid uuid.UUID `param:"uuid"`
+}
+
+type GetReviewsDto struct {
+	Page  uint `query:"page"`
+	Count uint `query:"count"`
+}
+
+type GetReviewsByCategoryDto struct {
+	GetReviewsDto
+	CategoryUuid uuid.UUID `param:"category_uuid"`
+
+	Category models.Category
+}
+
+type GetReviewsBySeriesDto struct {
+	SeriesUuid uuid.UUID `param:"series_uuid"`
+
+	Series models.Series
+}

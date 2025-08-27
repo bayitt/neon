@@ -126,3 +126,80 @@ func (rv *ReviewValidator) ValidateUpdate(
 
 	return review, urDto, nil
 }
+
+func (rv *ReviewValidator) ValidateGet(context echo.Context) (models.Review, error) {
+	grDto := new(dto.GetReviewDto)
+	if err := context.Bind(grDto); err != nil {
+		return models.Review{}, utilities.ThrowError(
+			http.StatusBadRequest,
+			"MALFORMED_REQUEST",
+			err.Error(),
+		)
+	}
+
+	review, err := rv.Rs.FindUnique("uuid", grDto.Uuid.String(), true)
+	if err != nil {
+		return models.Review{}, err
+	}
+
+	return review, nil
+}
+
+func (rv *ReviewValidator) ValidateGetMultiple(context echo.Context) (*dto.GetReviewsDto, error) {
+	grDto := new(dto.GetReviewsDto)
+	if err := context.Bind(grDto); err != nil {
+		return nil, utilities.ThrowError(http.StatusBadRequest, "MALFORMED_REQUEST", err.Error())
+	}
+
+	if grDto.Page == 0 {
+		grDto.Page = 1
+	}
+
+	if grDto.Count == 0 {
+		grDto.Count = 10
+	}
+
+	return grDto, nil
+}
+
+func (rv *ReviewValidator) ValidateGetByCategory(
+	context echo.Context,
+) (*dto.GetReviewsByCategoryDto, error) {
+	grbcDto := new(dto.GetReviewsByCategoryDto)
+	if err := context.Bind(grbcDto); err != nil {
+		return nil, utilities.ThrowError(http.StatusBadRequest, "MALFORMED_REQUEST", err.Error())
+	}
+
+	if grbcDto.Page == 0 {
+		grbcDto.Page = 1
+	}
+
+	if grbcDto.Count == 0 {
+		grbcDto.Count = 10
+	}
+
+	category, categoryErr := rv.Cs.FindUnique("uuid", grbcDto.CategoryUuid.String())
+	if categoryErr != nil {
+		return nil, categoryErr
+	}
+
+	grbcDto.Category = category
+	return grbcDto, nil
+}
+
+func (rv *ReviewValidator) ValidateGetBySeries(
+	context echo.Context,
+) (*dto.GetReviewsBySeriesDto, error) {
+	grbsDto := new(dto.GetReviewsBySeriesDto)
+	if err := context.Bind(grbsDto); err != nil {
+		return nil, utilities.ThrowError(http.StatusBadRequest, "MALFORMED_REQUEST", err.Error())
+	}
+
+	series, seriesErr := rv.Ss.FindUnique("uuid", grbsDto.SeriesUuid.String())
+	if seriesErr != nil {
+		return nil, seriesErr
+	}
+
+	grbsDto.Series = series
+	return grbsDto, nil
+}
