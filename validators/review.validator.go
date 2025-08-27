@@ -151,5 +151,38 @@ func (rv *ReviewValidator) ValidateGetMultiple(context echo.Context) (*dto.GetRe
 		return nil, utilities.ThrowError(http.StatusBadRequest, "MALFORMED_REQUEST", err.Error())
 	}
 
+	if grDto.Page == 0 {
+		grDto.Page = 1
+	}
+
+	if grDto.Count == 0 {
+		grDto.Count = 10
+	}
+
 	return grDto, nil
+}
+
+func (rv *ReviewValidator) ValidateGetByCategory(
+	context echo.Context,
+) (*dto.GetReviewsByCategoryDto, error) {
+	grbcDto := new(dto.GetReviewsByCategoryDto)
+	if err := context.Bind(grbcDto); err != nil {
+		return nil, utilities.ThrowError(http.StatusBadRequest, "MALFORMED_REQUEST", err.Error())
+	}
+
+	if grbcDto.Page == 0 {
+		grbcDto.Page = 1
+	}
+
+	if grbcDto.Count == 0 {
+		grbcDto.Count = 10
+	}
+
+	category, categoryErr := rv.Cs.FindUnique("uuid", grbcDto.CategoryUuid.String())
+	if categoryErr != nil {
+		return nil, categoryErr
+	}
+
+	grbcDto.Category = category
+	return grbcDto, nil
 }

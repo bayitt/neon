@@ -46,9 +46,9 @@ func (rs *ReviewService) FindUnique(
 }
 
 func (rs *ReviewService) Find(
-	offset int,
-	count int,
-	where map[string]int,
+	offset uint,
+	count uint,
+	where map[string]uint,
 ) ([]models.Review, error) {
 	var reviews []models.Review
 	var result *gorm.DB
@@ -56,11 +56,19 @@ func (rs *ReviewService) Find(
 	if len(where) > 0 {
 		mapKeys := slices.Collect(maps.Keys(where))
 		mapValues := slices.Collect(maps.Values(where))
-		result = rs.DB.Where(fmt.Sprintf("%s = ?", mapKeys[0]), mapValues[0]).
-			Offset(offset).
-			Limit(count).Find(&reviews).Preload(clause.Associations)
+		result = rs.DB.
+			Where(fmt.Sprintf("%s = ?", mapKeys[0]), mapValues[0]).
+			Order("created_at desc").
+			Offset(int(offset)).
+			Limit(int(count)).Find(&reviews).
+			Preload(clause.Associations)
 	} else {
-		result = rs.DB.Offset(offset).Limit(count).Preload(clause.Associations).Find(&reviews)
+		result = rs.DB.
+			Order("created_at desc").
+			Offset(int(offset)).
+			Limit(int(count)).
+			Preload(clause.Associations).
+			Find(&reviews)
 	}
 
 	if result.Error != nil {
@@ -74,7 +82,43 @@ func (rs *ReviewService) Find(
 	return reviews, nil
 }
 
-func (rs *ReviewService) Count(where map[string]int) int64 {
+func (rs *ReviewService) FindCategoryReviews(
+	category models.Category,
+	offset uint,
+	count uint,
+) ([]models.Review, error) {
+	var categoryReviews, reviewIds, reviews = []models.CategoryReview{}, []uint{}, []models.Review{}
+	result := rs.DB.
+		Where("category_id = ?", category.ID).
+		Order("created_at desc").
+		Offset(int(offset)).
+		Limit(int(count)).Find(&categoryReviews)
+
+	if result.Error != nil {
+		return []models.Review{}, utilities.ThrowError(
+			http.StatusInternalServerError,
+			"INTERNAL_SERVER_ERROR",
+			result.Error.Error(),
+		)
+	}
+
+	for _, categoryReview := range categoryReviews {
+		reviewIds = append(reviewIds, categoryReview.ReviewID)
+	}
+
+	reviewResult := rs.DB.Order("created_at desc").Where(reviewIds).Find(&reviews)
+	if reviewResult.Error != nil {
+		return []models.Review{}, utilities.ThrowError(
+			http.StatusInternalServerError,
+			"INTERNAL_SERVER_ERROR",
+			reviewResult.Error.Error(),
+		)
+	}
+
+	return reviews, nil
+}
+
+func (rs *ReviewService) Count(where map[string]uint) uint {
 	var totalReviews int64
 	if len(where) > 0 {
 		mapKeys := slices.Collect(maps.Keys(where))
@@ -86,7 +130,12 @@ func (rs *ReviewService) Count(where map[string]int) int64 {
 		rs.DB.Model(models.Review{}).Count(&totalReviews)
 	}
 
-	return totalReviews
+	return uint(totalReviews)
+}
+
+func (rs *ReviewService) CountCategoryReviews(category models.Category) uint {
+	totalCategoryReviews := rs.DB.Model(&category).Association("Reviews").Count()
+	return uint(totalCategoryReviews)
 }
 
 func (rs *ReviewService) Create(crDto *dto.CreateReviewDto) (models.Review, error) {

@@ -42,3 +42,10 @@ type GetReviewsDto struct {
 	Page  uint `query:"page"`
 	Count uint `query:"count"`
 }
+
+type GetReviewsByCategoryDto struct {
+	GetReviewsDto
+	CategoryUuid uuid.UUID `param:"category_uuid"`
+
+	Category models.Category
+}

@@ -2,13 +2,17 @@ package controllers
 
 import (
 	"context"
+	"encoding/json"
+	"math"
 	"mime/multipart"
 	"neon/middleware"
+	"neon/models"
 	"neon/services"
 	"neon/utilities"
 	"neon/validators"
 	"net/http"
 	"os"
+	"strings"
 
 	"github.com/cloudinary/cloudinary-go/v2"
 	"github.com/cloudinary/cloudinary-go/v2/api"
@@ -22,7 +26,7 @@ type ReviewController struct {
 	service   *services.ReviewService
 }
 
-func RegisterReviewRoutes(group *echo.Group) {
+func RegisterReviewRoutes(app *echo.Echo) {
 	db := utilities.GetDatabaseObject()
 	cs := &services.CategoryService{DB: db}
 	ss := &services.SeriesService{DB: db}
@@ -30,16 +34,17 @@ func RegisterReviewRoutes(group *echo.Group) {
 	rv := &validators.ReviewValidator{Rs: rs, Cs: cs, Ss: ss}
 	rc := &ReviewController{validator: rv, service: rs}
 
-	createReviewGroup := group.Group("")
+	createReviewGroup := app.Group("/reviews")
 	createReviewGroup.Use(middleware.AuthMiddleware)
-	createReviewGroup.POST("", rc.create)
+	createReviewGroup.POST("/reviews", rc.create)
 
-	updateReviewGroup := group.Group("/:uuid")
+	updateReviewGroup := app.Group("/reviews/:uuid")
 	updateReviewGroup.Use(middleware.AuthMiddleware)
 	updateReviewGroup.PUT("", rc.update)
 
-	group.GET("/:uuid", rc.get)
-	group.GET("", rc.getAll)
+	app.GET("/categories/:category_uuid/reviews", rc.getByCategory)
+	app.GET("/reviews/:uuid", rc.get)
+	app.GET("/reviews", rc.getAll)
 }
 
 func uploadImage(image *multipart.FileHeader, uuid string) (string, error) {
@@ -82,6 +87,31 @@ func uploadImage(image *multipart.FileHeader, uuid string) (string, error) {
 	}
 
 	return uploadResult.SecureURL, nil
+}
+
+func parseReviews(context echo.Context, reviews []models.Review) []map[string]interface{} {
+	query := context.Request().URL.Query()
+	fields := query.Get("fields")
+	reviewsJson, _ := json.Marshal(reviews)
+	var reviewsResponse []map[string]interface{}
+	json.Unmarshal(reviewsJson, &reviewsResponse)
+
+	if len(fields) == 0 {
+		return reviewsResponse
+	}
+
+	parsedFields := strings.Split(fields, ",")
+	var parsedReviews = []map[string]interface{}{}
+
+	for _, review := range reviewsResponse {
+		var parsedReview = map[string]interface{}{}
+		for _, field := range parsedFields {
+			parsedReview[field] = review[field]
+		}
+		parsedReviews = append(parsedReviews, parsedReview)
+	}
+
+	return parsedReviews
 }
 
 func (rc *ReviewController) create(context echo.Context) error {
@@ -141,7 +171,7 @@ func (rc *ReviewController) get(context echo.Context) error {
 		return err
 	}
 
-	return context.JSON(http.StatusOK, review)
+	return context.JSON(http.StatusOK, parseReviews(context, []models.Review{review})[0])
 }
 
 func (rc *ReviewController) getAll(context echo.Context) error {
@@ -151,21 +181,46 @@ func (rc *ReviewController) getAll(context echo.Context) error {
 	}
 
 	offset := (grDto.Page - 1) * grDto.Count
-	reviews, getErr := rc.service.Find(int(offset), int(grDto.Count), map[string]int{})
+	reviews, getErr := rc.service.Find(offset, grDto.Count, map[string]uint{})
 	if getErr != nil {
 		return getErr
 	}
 
-	totalReviews := rc.service.Count(map[string]int{})
-	totalPages := totalReviews / int64(grDto.Count)
+	totalReviews := rc.service.Count(map[string]uint{})
+	totalPages := uint(math.Ceil(float64(totalReviews) / float64(grDto.Count)))
 	return context.JSON(
 		http.StatusOK,
 		map[string]interface{}{
-			"reviews": reviews,
-			"pagination": map[string]int{
-				"currentPage": int(grDto.Page),
-				"totalPages":  int(totalPages),
+			"reviews": parseReviews(context, reviews),
+			"pagination": map[string]uint{
+				"currentPage": grDto.Page,
+				"totalPages":  totalPages,
 			},
+		},
+	)
+}
+
+func (rc *ReviewController) getByCategory(context echo.Context) error {
+	grbcDto, err := rc.validator.ValidateGetByCategory(context)
+	if err != nil {
+		return err
+	}
+
+	category := grbcDto.Category
+	offset := (grbcDto.Page - 1) * grbcDto.Count
+	reviews, reviewErr := rc.service.FindCategoryReviews(category, offset, grbcDto.Count)
+	if reviewErr != nil {
+		return reviewErr
+	}
+
+	totalReviews := rc.service.CountCategoryReviews(category)
+	totalPages := uint(math.Ceil(float64(totalReviews) / float64(grbcDto.Count)))
+
+	return context.JSON(
+		http.StatusOK,
+		map[string]interface{}{
+			"reviews":    parseReviews(context, reviews),
+			"pagination": map[string]uint{"currentPage": grbcDto.Page, "lastPage": totalPages},
 		},
 	)
 }
