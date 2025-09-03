@@ -31,6 +31,21 @@ func (cs *CategoryService) FindUnique(field string, value string) (models.Catego
 	return category, nil
 }
 
+func (cs *CategoryService) Find() ([]models.Category, error) {
+	var categories []models.Category
+	result := cs.DB.Find(&categories)
+
+	if result.Error != nil {
+		return categories, utilities.ThrowError(
+			http.StatusInternalServerError,
+			"INTERNAL_SERVER_ERROR",
+			result.Error.Error(),
+		)
+	}
+
+	return categories, nil
+}
+
 func (cs *CategoryService) Create(ccDto *dto.CreateCategoryDto) (models.Category, error) {
 	slug := "/" + strings.Replace(
 		ccDto.Name,
