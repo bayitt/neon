@@ -42,6 +42,8 @@ func (rs *ReviewService) FindUnique(
 			fmt.Sprintf("review with field %s and value %s does not exist", field, value),
 		)
 	}
+
+	review.Excerpt = review.Content[0:200]
 	return review, nil
 }
 
@@ -80,7 +82,12 @@ func (rs *ReviewService) Find(
 		)
 	}
 
-	return reviews, nil
+	parsedReviews := []models.Review{}
+	for _, review := range reviews {
+		review.Excerpt = review.Content[0:200]
+		parsedReviews = append(parsedReviews, review)
+	}
+	return parsedReviews, nil
 }
 
 func (rs *ReviewService) FindCategoryReviews(
@@ -124,7 +131,12 @@ func (rs *ReviewService) FindCategoryReviews(
 		)
 	}
 
-	return reviews, nil
+	parsedReviews := []models.Review{}
+	for _, review := range reviews {
+		review.Excerpt = review.Content[0:200]
+		parsedReviews = append(parsedReviews, review)
+	}
+	return parsedReviews, nil
 }
 
 func (rs *ReviewService) Count(where map[string]uint) uint {
@@ -333,5 +345,6 @@ func (rs *ReviewService) Update(
 		review.Series = &series
 	}
 	review.Categories = categories
+	review.Excerpt = review.Content[0:200]
 	return review, nil
 }

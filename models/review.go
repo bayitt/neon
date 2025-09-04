@@ -20,4 +20,6 @@ type Review struct {
 	CreatedAt  time.Time   `gorm:"not null"                                      json:"created_at"`
 	UpdatedAt  time.Time   `gorm:"not null"                                      json:"-"`
 	Categories []*Category `gorm:"many2many:categories_reviews"                  json:"categories"`
+
+	Excerpt string `json:"excerpt"`
 }
