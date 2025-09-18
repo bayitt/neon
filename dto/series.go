@@ -14,3 +14,8 @@ type UpdateSeriesDto struct {
 	Author      *string   `             json:"author"`
 	Description *string   `             json:"description"`
 }
+
+type GetSeriesDto struct {
+	Page  uint `query:"page"`
+	Count uint `query:"count"`
+}

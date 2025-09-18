@@ -15,14 +15,18 @@ type SeriesController struct {
 	validator *validators.SeriesValidator
 }
 
-func RegisterSeriesRoutes(group *echo.Group) {
+func RegisterSeriesRoutes(app *echo.Echo) {
 	db := utilities.GetDatabaseObject()
 	ss := &services.SeriesService{DB: db}
 	sc := &SeriesController{service: ss, validator: &validators.SeriesValidator{Service: ss}}
 
-	group.Use(middleware.AuthMiddleware)
-	group.POST("", sc.create)
-	group.PUT("/:uuid", sc.update)
+	guardedGroup := app.Group("/series")
+	guardedGroup.Use(middleware.AuthMiddleware)
+	guardedGroup.POST("", sc.create)
+	guardedGroup.PUT("/:uuid", sc.update)
+
+	unGuardedGroup := app.Group("/series")
+	unGuardedGroup.GET("", sc.getAll)
 }
 
 func (sc *SeriesController) create(context echo.Context) error {
@@ -49,4 +53,19 @@ func (sc *SeriesController) update(context echo.Context) error {
 		return updateErr
 	}
 	return context.JSON(http.StatusOK, updatedSeries)
+}
+
+func (sc *SeriesController) getAll(context echo.Context) error {
+	gsDto, err := sc.validator.ValidateFind(context)
+	if err != nil {
+		return err
+	}
+
+	offset := (gsDto.Page - 1) * gsDto.Count
+	series, seriesErr := sc.service.Find(offset, gsDto.Count)
+	if seriesErr != nil {
+		return seriesErr
+	}
+
+	return context.JSON(http.StatusOK, series)
 }

@@ -25,9 +25,9 @@ func main() {
 	app := echo.New()
 	app.Validator = &utilities.RequestValidator{Validator: validator.New()}
 	controllers.RegisterOauthRoutes(app.Group("/login"))
-	controllers.RegisterSeriesRoutes(app.Group("/series"))
 	controllers.RegisterSubscriberRoutes(app.Group("/subscribers"))
 	controllers.RegisterCategoryRoutes(app)
+	controllers.RegisterSeriesRoutes(app)
 	controllers.RegisterReviewRoutes(app)
 
 	utilities.RegisterCors(app)

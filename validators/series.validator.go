@@ -80,3 +80,21 @@ func (sv *SeriesValidator) ValidateUpdate(
 
 	return series, usDto, nil
 }
+
+func (sv *SeriesValidator) ValidateFind(context echo.Context) (*dto.GetSeriesDto, error) {
+	gsDto := new(dto.GetSeriesDto)
+
+	if err := context.Bind(gsDto); err != nil {
+		return nil, utilities.ThrowError(http.StatusBadRequest, "MALFORMED_REQUEST", err.Error())
+	}
+
+	if gsDto.Page == 0 {
+		gsDto.Page = 1
+	}
+
+	if gsDto.Count == 0 {
+		gsDto.Count = 10
+	}
+
+	return gsDto, nil
+}

@@ -102,3 +102,45 @@ func (ss *SeriesService) Update(
 
 	return series, nil
 }
+
+func (ss *SeriesService) Find(offset uint, count uint) ([]models.Series, error) {
+	var series []models.Series
+	result := ss.DB.Order("created_at desc").
+		Offset(int(offset)).
+		Limit(int(count)).
+		Preload("Reviews", func(db *gorm.DB) *gorm.DB {
+			return db.Order("reviews.created_at DESC").Select("SeriesID", "Image")
+		}).
+		Find(&series)
+
+	if result.Error != nil {
+		return []models.Series{}, utilities.ThrowError(
+			http.StatusInternalServerError,
+			"INTERNAL_SERVER_ERROR",
+			result.Error.Error(),
+		)
+	}
+
+	var parsedSeries []models.Series
+
+	for _, series := range series {
+		var images []string
+
+		if len(series.Reviews) == 0 {
+			series.Images = images
+			parsedSeries = append(parsedSeries, series)
+			continue
+		}
+
+		for _, review := range series.Reviews {
+			if len(*review.Image) > 0 {
+				images = append(images, *review.Image)
+			}
+		}
+
+		series.Images = images
+		parsedSeries = append(parsedSeries, series)
+	}
+
+	return parsedSeries, nil
+}

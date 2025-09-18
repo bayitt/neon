@@ -221,7 +221,7 @@ func (rc *ReviewController) getByCategory(context echo.Context) error {
 		http.StatusOK,
 		map[string]interface{}{
 			"reviews":    parseReviews(context, reviews),
-			"pagination": map[string]uint{"currentPage": grbcDto.Page, "lastPage": totalPages},
+			"pagination": map[string]uint{"currentPage": grbcDto.Page, "totalPages": totalPages},
 		},
 	)
 }
