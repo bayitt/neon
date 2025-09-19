@@ -16,7 +16,7 @@ type Series struct {
 	Description *string   `gorm:"type:text"                         json:"description"`
 	CreatedAt   time.Time `gorm:"not null"                          json:"-"`
 	UpdatedAt   time.Time `gorm:"not null"                          json:"-"`
-	Reviews     []Review  `json:"-"`
+	Reviews     []Review  `                                         json:"-"`
 
 	Images []string `gorm:"-" json:"images"`
 }

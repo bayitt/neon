@@ -127,7 +127,7 @@ func (ss *SeriesService) Find(offset uint, count uint) ([]models.Series, error) 
 		var images []string
 
 		if len(series.Reviews) == 0 {
-			series.Images = images
+			series.Images = make([]string, 0)
 			parsedSeries = append(parsedSeries, series)
 			continue
 		}
@@ -143,4 +143,11 @@ func (ss *SeriesService) Find(offset uint, count uint) ([]models.Series, error) 
 	}
 
 	return parsedSeries, nil
+}
+
+func (ss *SeriesService) Count() uint {
+	var totalSeries int64
+	ss.DB.Model(models.Series{}).Count(&totalSeries)
+
+	return uint(totalSeries)
 }

@@ -1,11 +1,15 @@
 package controllers
 
 import (
+	"encoding/json"
+	"math"
 	"neon/middleware"
+	"neon/models"
 	"neon/services"
 	"neon/utilities"
 	"neon/validators"
 	"net/http"
+	"strings"
 
 	"github.com/labstack/echo/v4"
 )
@@ -27,6 +31,33 @@ func RegisterSeriesRoutes(app *echo.Echo) {
 
 	unGuardedGroup := app.Group("/series")
 	unGuardedGroup.GET("", sc.getAll)
+}
+
+func parseSeries(context echo.Context, series []models.Series) []map[string]interface{} {
+	query := context.Request().URL.Query()
+	fields := query.Get("fields")
+	seriesJson, _ := json.Marshal(series)
+	var seriesResponse []map[string]interface{}
+	json.Unmarshal(seriesJson, &seriesResponse)
+
+	if len(fields) == 0 {
+		return seriesResponse
+	}
+
+	parsedFields := strings.Split(fields, ",")
+	var parsedSeries = []map[string]interface{}{}
+
+	for _, series := range seriesResponse {
+		var parsedSerie = map[string]interface{}{}
+
+		for _, field := range parsedFields {
+			parsedSerie[field] = series[field]
+		}
+
+		parsedSeries = append(parsedSeries, parsedSerie)
+	}
+
+	return parsedSeries
 }
 
 func (sc *SeriesController) create(context echo.Context) error {
@@ -67,5 +98,14 @@ func (sc *SeriesController) getAll(context echo.Context) error {
 		return seriesErr
 	}
 
-	return context.JSON(http.StatusOK, series)
+	totalSeries := sc.service.Count()
+	totalPages := uint(math.Ceil(float64(totalSeries) / float64(gsDto.Count)))
+
+	return context.JSON(
+		http.StatusOK,
+		map[string]interface{}{
+			"series":     parseSeries(context, series),
+			"pagination": map[string]uint{"currentPage": gsDto.Page, "totalPages": totalPages},
+		},
+	)
 }

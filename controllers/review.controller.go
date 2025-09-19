@@ -36,7 +36,7 @@ func RegisterReviewRoutes(app *echo.Echo) {
 
 	createReviewGroup := app.Group("/reviews")
 	createReviewGroup.Use(middleware.AuthMiddleware)
-	createReviewGroup.POST("/reviews", rc.create)
+	createReviewGroup.POST("", rc.create)
 
 	updateReviewGroup := app.Group("/reviews/:uuid")
 	updateReviewGroup.Use(middleware.AuthMiddleware)
