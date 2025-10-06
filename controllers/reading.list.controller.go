@@ -1,12 +1,14 @@
 package controllers
 
 import (
+	"fmt"
+	"neon/middleware"
 	"neon/services"
 	"neon/utilities"
 	"neon/validators"
 	"net/http"
 
-	"github.com/google/uuid"
+	uuidpkg "github.com/google/uuid"
 	"github.com/labstack/echo/v4"
 )
 
@@ -22,22 +24,28 @@ func RegisterReadingListRoutes(app *echo.Echo) {
 	rlc := &readingListController{service: rls, validator: rlv}
 
 	guardedGroup := app.Group("/reading-list")
+	guardedGroup.Use(middleware.AuthMiddleware)
 	guardedGroup.POST("", rlc.create)
 }
 
 func (rlc *readingListController) create(context echo.Context) error {
 	crlDto, err := rlc.validator.ValidateCreate(context)
+	fmt.Println(err)
 	if err != nil {
 		return err
 	}
 
-	uuid := uuid.New()
+	uuid := uuidpkg.New()
 	crlDto.Uuid = uuid
 
 	imageFile, imageErr := context.FormFile("image")
 
 	if imageErr != nil {
-		return utilities.ThrowError(http.StatusBadRequest, "READING_LIST_003", imageErr.Error())
+		return utilities.ThrowError(
+			http.StatusBadRequest,
+			"READING_LIST_003",
+			fmt.Sprintf("Image is missing - %s", imageErr.Error()),
+		)
 	}
 
 	image, uploadErr := utilities.UploadImage(imageFile, uuid.String())
@@ -58,4 +66,8 @@ func (rlc *readingListController) create(context echo.Context) error {
 	}
 
 	return context.JSON(http.StatusCreated, readingListItem)
+}
+
+func (rlc *readingListController) update(context echo.Context) error {
+
 }

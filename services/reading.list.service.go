@@ -17,7 +17,9 @@ type ReadingListService struct {
 
 func (rls *ReadingListService) FindUnique(field string, value string) (models.ReadingList, error) {
 	var readingListItem models.ReadingList
-	result := rls.DB.Where(fmt.Sprintf("%s = ", field), value).First(&readingListItem)
+	result := rls.DB.Where(fmt.Sprintf("%s = ?", field), value).First(&readingListItem)
+
+	fmt.Println(result.Error)
 
 	if errors.Is(result.Error, gorm.ErrRecordNotFound) {
 		return readingListItem, utilities.ThrowError(
@@ -30,10 +32,15 @@ func (rls *ReadingListService) FindUnique(field string, value string) (models.Re
 	return readingListItem, nil
 }
 
+func (rls *ReadingListService) Update(readingListItem models.ReadingList, urlDto *dto.UpdateReadingListDto) (models.ReadingList, error) {
+
+}
+
 func (rls *ReadingListService) Create(
 	crlDto *dto.CreateReadingListDto,
 ) (models.ReadingList, error) {
 	readingListItem := models.ReadingList{
+		Uuid:   crlDto.Uuid,
 		Title:  crlDto.Title,
 		Author: crlDto.Author,
 		Image:  crlDto.Image,

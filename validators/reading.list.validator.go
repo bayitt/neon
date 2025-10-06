@@ -1,6 +1,7 @@
 package validators
 
 import (
+	"fmt"
 	"neon/dto"
 	"neon/services"
 	"neon/utilities"
@@ -28,11 +29,16 @@ func (rlv *ReadingListValidator) ValidateCreate(
 	}
 
 	crlDto.Title = strings.ToLower(crlDto.Title)
+	crlDto.Author = strings.ToLower(crlDto.Author)
 	_, readingListErr := rlv.Service.FindUnique("title", crlDto.Title)
 
 	if readingListErr != nil {
-		return nil, readingListErr
+		return crlDto, nil
 	}
 
-	return crlDto, nil
+	return crlDto, utilities.ThrowError(
+		http.StatusBadRequest,
+		"READING_LIST_001",
+		fmt.Sprintf("%s is already present in the reading list", crlDto.Title),
+	)
 }
