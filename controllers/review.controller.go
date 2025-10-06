@@ -1,22 +1,16 @@
 package controllers
 
 import (
-	"context"
 	"encoding/json"
 	"math"
-	"mime/multipart"
 	"neon/middleware"
 	"neon/models"
 	"neon/services"
 	"neon/utilities"
 	"neon/validators"
 	"net/http"
-	"os"
 	"strings"
 
-	"github.com/cloudinary/cloudinary-go/v2"
-	"github.com/cloudinary/cloudinary-go/v2/api"
-	"github.com/cloudinary/cloudinary-go/v2/api/uploader"
 	"github.com/google/uuid"
 	"github.com/labstack/echo/v4"
 )
@@ -46,48 +40,6 @@ func RegisterReviewRoutes(app *echo.Echo) {
 	app.GET("/series/:series_uuid/reviews", rc.getBySeries)
 	app.GET("/reviews/:uuid", rc.get)
 	app.GET("/reviews", rc.getAll)
-}
-
-func uploadImage(image *multipart.FileHeader, uuid string) (string, error) {
-	cloudinary, cloudinaryErr := cloudinary.New()
-	if cloudinaryErr != nil {
-		return "", utilities.ThrowError(
-			http.StatusInternalServerError,
-			"INTERNAL_SERVER_ERROR",
-			cloudinaryErr.Error(),
-		)
-	}
-
-	source, err := image.Open()
-	if err != nil {
-		return "", utilities.ThrowError(
-			http.StatusInternalServerError,
-			"INTERNAL_SERVER_ERROR",
-			err.Error(),
-		)
-	}
-
-	defer source.Close()
-	uploadResult, uploadErr := cloudinary.Upload.Upload(
-		context.Background(),
-		source,
-		uploader.UploadParams{
-			Folder:       os.Getenv("CLOUDINARY_FOLDER"),
-			ResourceType: "image",
-			PublicID:     uuid,
-			Overwrite:    api.Bool(true),
-		},
-	)
-
-	if uploadErr != nil {
-		return "", utilities.ThrowError(
-			http.StatusInternalServerError,
-			"INTERNAL_SERVER_ERROR",
-			uploadErr.Error(),
-		)
-	}
-
-	return uploadResult.SecureURL, nil
 }
 
 func parseReviews(context echo.Context, reviews []models.Review) []map[string]interface{} {
@@ -127,10 +79,14 @@ func (rc *ReviewController) create(context echo.Context) error {
 	imageFile, imageErr := context.FormFile("image")
 
 	if imageErr == nil {
-		image, uploadErr := uploadImage(imageFile, uuid.String())
+		image, uploadErr := utilities.UploadImage(imageFile, uuid.String())
 
 		if uploadErr != nil {
-			return uploadErr
+			return utilities.ThrowError(
+				http.StatusInternalServerError,
+				"REVIEW_003",
+				uploadErr.Error(),
+			)
 		}
 		crDto.Image = &image
 	}
@@ -151,7 +107,7 @@ func (rc *ReviewController) update(context echo.Context) error {
 	imageFile, imageErr := context.FormFile("image")
 
 	if imageErr == nil {
-		image, uploadErr := uploadImage(imageFile, review.Uuid.String())
+		image, uploadErr := utilities.UploadImage(imageFile, review.Uuid.String())
 
 		if uploadErr != nil {
 			return uploadErr

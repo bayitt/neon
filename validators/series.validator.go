@@ -81,6 +81,27 @@ func (sv *SeriesValidator) ValidateUpdate(
 	return series, usDto, nil
 }
 
+func (sv *SeriesValidator) ValidateGetBySlug(context echo.Context) (models.Series, error) {
+	gsbsDto := new(dto.GetSeriesBySlugDto)
+
+	if err := context.Bind(gsbsDto); err != nil {
+		return models.Series{}, utilities.ThrowError(
+			http.StatusBadRequest,
+			"MALFORMED_REQUEST",
+			err.Error(),
+		)
+	}
+
+	gsbsDto.Slug = "/" + gsbsDto.Slug
+
+	series, seriesErr := sv.Service.FindUnique("slug", gsbsDto.Slug)
+	if seriesErr != nil {
+		return models.Series{}, seriesErr
+	}
+
+	return series, nil
+}
+
 func (sv *SeriesValidator) ValidateFind(context echo.Context) (*dto.GetSeriesDto, error) {
 	gsDto := new(dto.GetSeriesDto)
 

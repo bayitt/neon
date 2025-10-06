@@ -29,6 +29,7 @@ func main() {
 	controllers.RegisterCategoryRoutes(app)
 	controllers.RegisterSeriesRoutes(app)
 	controllers.RegisterReviewRoutes(app)
+	controllers.RegisterReadingListRoutes(app)
 
 	utilities.RegisterCors(app)
 	app.Logger.Fatal(app.Start(fmt.Sprintf(":%s", os.Getenv("APP_PORT"))))

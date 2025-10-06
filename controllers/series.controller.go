@@ -31,6 +31,7 @@ func RegisterSeriesRoutes(app *echo.Echo) {
 
 	unGuardedGroup := app.Group("/series")
 	unGuardedGroup.GET("", sc.getAll)
+	unGuardedGroup.GET("/:slug", sc.getBySlug)
 }
 
 func parseSeries(context echo.Context, series []models.Series) []map[string]interface{} {
@@ -84,6 +85,16 @@ func (sc *SeriesController) update(context echo.Context) error {
 		return updateErr
 	}
 	return context.JSON(http.StatusOK, updatedSeries)
+}
+
+func (sc *SeriesController) getBySlug(context echo.Context) error {
+	series, err := sc.validator.ValidateGetBySlug(context)
+	if err != nil {
+		return err
+	}
+
+	parsedSeries := parseSeries(context, []models.Series{series})[0]
+	return context.JSON(http.StatusOK, parsedSeries)
 }
 
 func (sc *SeriesController) getAll(context echo.Context) error {
