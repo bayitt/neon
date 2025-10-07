@@ -74,3 +74,22 @@ func (rlv *ReadingListValidator) ValidateUpdate(
 
 	return readingListItem, urlDto, nil
 }
+
+func (rlv *ReadingListValidator) ValidateDelete(context echo.Context) (models.ReadingList, error) {
+	drlDto := new(dto.DeleteReadingListDto)
+
+	if err := context.Bind(drlDto); err != nil {
+		return models.ReadingList{}, utilities.ThrowError(
+			http.StatusBadRequest,
+			"MALFORMED_REQUEST",
+			err.Error(),
+		)
+	}
+
+	readingListItem, readingListErr := rlv.Service.FindUnique("uuid", drlDto.Uuid.String())
+	if readingListErr != nil {
+		return models.ReadingList{}, readingListErr
+	}
+
+	return readingListItem, nil
+}

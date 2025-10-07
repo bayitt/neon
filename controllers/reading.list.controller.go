@@ -29,20 +29,29 @@ func RegisterReadingListRoutes(app *echo.Echo) {
 	guardedGroup.Use(middleware.AuthMiddleware)
 	guardedGroup.POST("", rlc.create)
 	guardedGroup.PUT("/:uuid", rlc.update)
+	guardedGroup.DELETE("/:uuid", rlc.delete)
+
+	unguardedGroup := app.Group("/reading-list")
+	unguardedGroup.GET("", rlc.getAll)
 }
 
-func parseReadingListItem(readingListItem models.ReadingList) map[string]interface{} {
+func parseReadingListItems(readingListItem []models.ReadingList) []map[string]interface{} {
 	readingListItemJson, _ := json.Marshal(readingListItem)
-	var parsedReadingListItem map[string]interface{}
-	json.Unmarshal(readingListItemJson, &parsedReadingListItem)
+	var readingListItems []map[string]interface{}
+	json.Unmarshal(readingListItemJson, &readingListItems)
+	var parsedReadingListItems = []map[string]interface{}{}
 
-	if parsedReadingListItem["status"].(float64) == 1 {
-		parsedReadingListItem["status"] = true
-	} else {
-		parsedReadingListItem["status"] = false
+	for _, readingListItem := range readingListItems {
+		if readingListItem["status"].(float64) == 1 {
+			readingListItem["status"] = true
+		} else {
+			readingListItem["status"] = false
+		}
+
+		parsedReadingListItems = append(parsedReadingListItems, readingListItem)
 	}
 
-	return parsedReadingListItem
+	return parsedReadingListItems
 }
 
 func (rlc *readingListController) create(context echo.Context) error {
@@ -82,7 +91,10 @@ func (rlc *readingListController) create(context echo.Context) error {
 		return createErr
 	}
 
-	return context.JSON(http.StatusOK, parseReadingListItem(readingListItem))
+	return context.JSON(
+		http.StatusOK,
+		parseReadingListItems([]models.ReadingList{readingListItem})[0],
+	)
 }
 
 func (rlc *readingListController) update(context echo.Context) error {
@@ -111,5 +123,32 @@ func (rlc *readingListController) update(context echo.Context) error {
 		return updateErr
 	}
 
-	return context.JSON(http.StatusOK, parseReadingListItem(updatedReadingListItem))
+	return context.JSON(
+		http.StatusOK,
+		parseReadingListItems([]models.ReadingList{updatedReadingListItem})[0],
+	)
+}
+
+func (rlc *readingListController) delete(context echo.Context) error {
+	readingListItem, err := rlc.validator.ValidateDelete(context)
+	if err != nil {
+		return err
+	}
+
+	deleteErr := rlc.service.Delete(readingListItem)
+	if deleteErr != nil {
+		return deleteErr
+	}
+
+	return context.JSON(http.StatusNoContent, map[string]string{})
+}
+
+func (rlc *readingListController) getAll(context echo.Context) error {
+	readingListItems, err := rlc.service.Find()
+
+	if err != nil {
+		return err
+	}
+
+	return context.JSON(http.StatusOK, parseReadingListItems(readingListItems))
 }

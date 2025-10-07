@@ -34,6 +34,43 @@ func (rls *ReadingListService) FindUnique(field string, value string) (models.Re
 	return readingListItem, nil
 }
 
+func (rls *ReadingListService) Find() ([]models.ReadingList, error) {
+	var readingListItems []models.ReadingList
+	result := rls.DB.Order("created_at desc").Find(&readingListItems)
+
+	if result.Error != nil {
+		return []models.ReadingList{}, utilities.ThrowError(
+			http.StatusInternalServerError,
+			"INTERNAL_SERVER_ERROR",
+			result.Error.Error(),
+		)
+	}
+
+	return readingListItems, nil
+}
+
+func (rls *ReadingListService) Create(
+	crlDto *dto.CreateReadingListDto,
+) (models.ReadingList, error) {
+	readingListItem := models.ReadingList{
+		Uuid:   crlDto.Uuid,
+		Title:  crlDto.Title,
+		Author: crlDto.Author,
+		Image:  crlDto.Image,
+	}
+	result := rls.DB.Save(&readingListItem)
+
+	if result.Error != nil {
+		return readingListItem, utilities.ThrowError(
+			http.StatusInternalServerError,
+			"INTERNAL_SERVER_ERROR",
+			result.Error.Error(),
+		)
+	}
+
+	return readingListItem, nil
+}
+
 func (rls *ReadingListService) Update(
 	readingListItem models.ReadingList,
 	urlDto *dto.UpdateReadingListDto,
@@ -98,24 +135,16 @@ func (rls *ReadingListService) Update(
 	return readingListItem, nil
 }
 
-func (rls *ReadingListService) Create(
-	crlDto *dto.CreateReadingListDto,
-) (models.ReadingList, error) {
-	readingListItem := models.ReadingList{
-		Uuid:   crlDto.Uuid,
-		Title:  crlDto.Title,
-		Author: crlDto.Author,
-		Image:  crlDto.Image,
-	}
-	result := rls.DB.Save(&readingListItem)
+func (rls *ReadingListService) Delete(readingListItem models.ReadingList) error {
+	result := rls.DB.Delete(&readingListItem)
 
 	if result.Error != nil {
-		return readingListItem, utilities.ThrowError(
+		return utilities.ThrowError(
 			http.StatusInternalServerError,
 			"INTERNAL_SERVER_ERROR",
 			result.Error.Error(),
 		)
 	}
 
-	return readingListItem, nil
+	return nil
 }

@@ -18,3 +18,7 @@ type UpdateReadingListDto struct {
 
 	Image *string
 }
+
+type DeleteReadingListDto struct {
+	Uuid uuid.UUID `param:"uuid"`
+}
