@@ -25,10 +25,12 @@ func main() {
 	app := echo.New()
 	app.Validator = &utilities.RequestValidator{Validator: validator.New()}
 	controllers.RegisterOauthRoutes(app.Group("/login"))
-	controllers.RegisterCategoryRoutes(app.Group("/categories"))
-	controllers.RegisterSeriesRoutes(app.Group("/series"))
 	controllers.RegisterSubscriberRoutes(app.Group("/subscribers"))
+	controllers.RegisterCategoryRoutes(app)
+	controllers.RegisterSeriesRoutes(app)
 	controllers.RegisterReviewRoutes(app)
+	controllers.RegisterReadingListRoutes(app)
 
+	utilities.RegisterCors(app)
 	app.Logger.Fatal(app.Start(fmt.Sprintf(":%s", os.Getenv("APP_PORT"))))
 }

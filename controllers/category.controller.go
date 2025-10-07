@@ -15,14 +15,20 @@ type CategoryController struct {
 	validator *validators.CategoryValidator
 }
 
-func RegisterCategoryRoutes(group *echo.Group) {
+func RegisterCategoryRoutes(app *echo.Echo) {
 	db := utilities.GetDatabaseObject()
 	cs := &services.CategoryService{DB: db}
 	cc := &CategoryController{service: cs, validator: &validators.CategoryValidator{Service: cs}}
 
-	group.Use(middleware.AuthMiddleware)
-	group.POST("", cc.create)
-	group.PUT("/:uuid", cc.update)
+	createCategoryGroup := app.Group("/categories")
+	createCategoryGroup.Use(middleware.AuthMiddleware)
+	createCategoryGroup.POST("", cc.create)
+
+	updateCategoryGroup := app.Group("/categories")
+	updateCategoryGroup.Use(middleware.AuthMiddleware)
+	updateCategoryGroup.PUT("/:uuid", cc.update)
+
+	app.GET("/categories", cc.get)
 }
 
 func (cc *CategoryController) create(context echo.Context) error {
@@ -49,4 +55,13 @@ func (cc *CategoryController) update(context echo.Context) error {
 		return updateErr
 	}
 	return context.JSON(http.StatusOK, updatedCategory)
+}
+
+func (cc *CategoryController) get(context echo.Context) error {
+	categories, err := cc.service.Find()
+	if err != nil {
+		return err
+	}
+
+	return context.JSON(http.StatusOK, categories)
 }

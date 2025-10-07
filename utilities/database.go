@@ -47,5 +47,6 @@ func InitDatabase() {
 		&models.Series{},
 		&models.Review{},
 		&models.Subscriber{},
+		&models.ReadingList{},
 	)
 }
