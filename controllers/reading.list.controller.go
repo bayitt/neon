@@ -1,8 +1,10 @@
 package controllers
 
 import (
+	"encoding/json"
 	"fmt"
 	"neon/middleware"
+	"neon/models"
 	"neon/services"
 	"neon/utilities"
 	"neon/validators"
@@ -26,6 +28,21 @@ func RegisterReadingListRoutes(app *echo.Echo) {
 	guardedGroup := app.Group("/reading-list")
 	guardedGroup.Use(middleware.AuthMiddleware)
 	guardedGroup.POST("", rlc.create)
+	guardedGroup.PUT("/:uuid", rlc.update)
+}
+
+func parseReadingListItem(readingListItem models.ReadingList) map[string]interface{} {
+	readingListItemJson, _ := json.Marshal(readingListItem)
+	var parsedReadingListItem map[string]interface{}
+	json.Unmarshal(readingListItemJson, &parsedReadingListItem)
+
+	if parsedReadingListItem["status"].(float64) == 1 {
+		parsedReadingListItem["status"] = true
+	} else {
+		parsedReadingListItem["status"] = false
+	}
+
+	return parsedReadingListItem
 }
 
 func (rlc *readingListController) create(context echo.Context) error {
@@ -65,9 +82,34 @@ func (rlc *readingListController) create(context echo.Context) error {
 		return createErr
 	}
 
-	return context.JSON(http.StatusCreated, readingListItem)
+	return context.JSON(http.StatusOK, parseReadingListItem(readingListItem))
 }
 
 func (rlc *readingListController) update(context echo.Context) error {
+	readingListItem, urlDto, err := rlc.validator.ValidateUpdate(context)
+	if err != nil {
+		return err
+	}
 
+	imageFile, imageErr := context.FormFile("image")
+
+	if imageErr == nil {
+		image, uploadErr := utilities.UploadImage(imageFile, readingListItem.Uuid.String())
+
+		if uploadErr != nil {
+			return utilities.ThrowError(
+				http.StatusInternalServerError,
+				"INTERNAL_SERVER_ERROR",
+				uploadErr.Error(),
+			)
+		}
+		urlDto.Image = &image
+	}
+
+	updatedReadingListItem, updateErr := rlc.service.Update(readingListItem, urlDto)
+	if updateErr != nil {
+		return updateErr
+	}
+
+	return context.JSON(http.StatusOK, parseReadingListItem(updatedReadingListItem))
 }

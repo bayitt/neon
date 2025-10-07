@@ -11,9 +11,10 @@ type CreateReadingListDto struct {
 }
 
 type UpdateReadingListDto struct {
-	Title  *string `form:"title"`
-	Author *string `form:"author"`
-	Status *uint   `form:"status"`
+	Uuid   uuid.UUID `param:"uuid"`
+	Title  *string   `             form:"title"`
+	Author *string   `             form:"author"`
+	Status *bool     `             form:"status"`
 
 	Image *string
 }

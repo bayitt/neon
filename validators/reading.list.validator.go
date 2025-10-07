@@ -3,6 +3,7 @@ package validators
 import (
 	"fmt"
 	"neon/dto"
+	"neon/models"
 	"neon/services"
 	"neon/utilities"
 	"net/http"
@@ -41,4 +42,35 @@ func (rlv *ReadingListValidator) ValidateCreate(
 		"READING_LIST_001",
 		fmt.Sprintf("%s is already present in the reading list", crlDto.Title),
 	)
+}
+
+func (rlv *ReadingListValidator) ValidateUpdate(
+	context echo.Context,
+) (models.ReadingList, *dto.UpdateReadingListDto, error) {
+	urlDto := new(dto.UpdateReadingListDto)
+
+	if err := context.Bind(urlDto); err != nil {
+		return models.ReadingList{}, nil, utilities.ThrowError(
+			http.StatusBadRequest,
+			"MALFORMED_REQUEST",
+			err.Error(),
+		)
+	}
+
+	readingListItem, readingListErr := rlv.Service.FindUnique("uuid", urlDto.Uuid.String())
+	if readingListErr != nil {
+		return models.ReadingList{}, nil, readingListErr
+	}
+
+	if urlDto.Title != nil {
+		parsedTitle := strings.ToLower(*urlDto.Title)
+		urlDto.Title = &parsedTitle
+	}
+
+	if urlDto.Author != nil {
+		parsedAuthor := strings.ToLower(*urlDto.Author)
+		urlDto.Author = &parsedAuthor
+	}
+
+	return readingListItem, urlDto, nil
 }
