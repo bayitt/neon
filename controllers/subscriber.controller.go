@@ -9,7 +9,7 @@ import (
 	"github.com/labstack/echo/v4"
 )
 
-type SubscriberController struct {
+type subscriberController struct {
 	service   *services.SubscriberService
 	validator *validators.SubscriberValidator
 }
@@ -18,12 +18,12 @@ func RegisterSubscriberRoutes(group *echo.Group) {
 	db := utilities.GetDatabaseObject()
 	ss := &services.SubscriberService{DB: db}
 	sv := &validators.SubscriberValidator{}
-	sc := &SubscriberController{service: ss, validator: sv}
+	sc := &subscriberController{service: ss, validator: sv}
 
 	group.POST("", sc.Create)
 }
 
-func (sc *SubscriberController) Create(context echo.Context) error {
+func (sc *subscriberController) Create(context echo.Context) error {
 	csDto, err := sc.validator.ValidateCreate(context)
 	if err != nil {
 		return err

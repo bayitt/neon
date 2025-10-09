@@ -10,7 +10,7 @@ import (
 	"github.com/labstack/echo/v4"
 )
 
-type CategoryController struct {
+type categoryController struct {
 	service   *services.CategoryService
 	validator *validators.CategoryValidator
 }
@@ -18,7 +18,7 @@ type CategoryController struct {
 func RegisterCategoryRoutes(app *echo.Echo) {
 	db := utilities.GetDatabaseObject()
 	cs := &services.CategoryService{DB: db}
-	cc := &CategoryController{service: cs, validator: &validators.CategoryValidator{Service: cs}}
+	cc := &categoryController{service: cs, validator: &validators.CategoryValidator{Service: cs}}
 
 	createCategoryGroup := app.Group("/categories")
 	createCategoryGroup.Use(middleware.AuthMiddleware)
@@ -31,7 +31,7 @@ func RegisterCategoryRoutes(app *echo.Echo) {
 	app.GET("/categories", cc.get)
 }
 
-func (cc *CategoryController) create(context echo.Context) error {
+func (cc *categoryController) create(context echo.Context) error {
 	dto, err := cc.validator.ValidateCreate(context)
 	if err != nil {
 		return err
@@ -44,7 +44,7 @@ func (cc *CategoryController) create(context echo.Context) error {
 	return context.JSON(http.StatusCreated, category)
 }
 
-func (cc *CategoryController) update(context echo.Context) error {
+func (cc *categoryController) update(context echo.Context) error {
 	category, dto, err := cc.validator.ValidateUpdate(context)
 	if err != nil {
 		return err
@@ -57,7 +57,7 @@ func (cc *CategoryController) update(context echo.Context) error {
 	return context.JSON(http.StatusOK, updatedCategory)
 }
 
-func (cc *CategoryController) get(context echo.Context) error {
+func (cc *categoryController) get(context echo.Context) error {
 	categories, err := cc.service.Find()
 	if err != nil {
 		return err

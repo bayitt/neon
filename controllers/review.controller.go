@@ -15,7 +15,7 @@ import (
 	"github.com/labstack/echo/v4"
 )
 
-type ReviewController struct {
+type reviewController struct {
 	validator *validators.ReviewValidator
 	service   *services.ReviewService
 }
@@ -26,7 +26,7 @@ func RegisterReviewRoutes(app *echo.Echo) {
 	ss := &services.SeriesService{DB: db}
 	rs := &services.ReviewService{DB: db}
 	rv := &validators.ReviewValidator{Rs: rs, Cs: cs, Ss: ss}
-	rc := &ReviewController{validator: rv, service: rs}
+	rc := &reviewController{validator: rv, service: rs}
 
 	createReviewGroup := app.Group("/reviews")
 	createReviewGroup.Use(middleware.AuthMiddleware)
@@ -38,7 +38,7 @@ func RegisterReviewRoutes(app *echo.Echo) {
 
 	app.GET("/categories/:category_uuid/reviews", rc.getByCategory)
 	app.GET("/series/:series_uuid/reviews", rc.getBySeries)
-	app.GET("/reviews/:uuid", rc.get)
+	app.GET("/reviews/:slug", rc.get)
 	app.GET("/reviews", rc.getAll)
 }
 
@@ -67,7 +67,7 @@ func parseReviews(context echo.Context, reviews []models.Review) []map[string]in
 	return parsedReviews
 }
 
-func (rc *ReviewController) create(context echo.Context) error {
+func (rc *reviewController) create(context echo.Context) error {
 	crDto, err := rc.validator.ValidateCreate(context)
 	if err != nil {
 		return err
@@ -98,7 +98,7 @@ func (rc *ReviewController) create(context echo.Context) error {
 	return context.JSON(http.StatusCreated, review)
 }
 
-func (rc *ReviewController) update(context echo.Context) error {
+func (rc *reviewController) update(context echo.Context) error {
 	review, urDto, err := rc.validator.ValidateUpdate(context)
 	if err != nil {
 		return err
@@ -122,7 +122,7 @@ func (rc *ReviewController) update(context echo.Context) error {
 	return context.JSON(http.StatusOK, updatedReview)
 }
 
-func (rc *ReviewController) get(context echo.Context) error {
+func (rc *reviewController) get(context echo.Context) error {
 	review, err := rc.validator.ValidateGet(context)
 	if err != nil {
 		return err
@@ -131,7 +131,7 @@ func (rc *ReviewController) get(context echo.Context) error {
 	return context.JSON(http.StatusOK, parseReviews(context, []models.Review{review})[0])
 }
 
-func (rc *ReviewController) getAll(context echo.Context) error {
+func (rc *reviewController) getAll(context echo.Context) error {
 	grDto, err := rc.validator.ValidateGetMultiple(context)
 	if err != nil {
 		return err
@@ -157,7 +157,7 @@ func (rc *ReviewController) getAll(context echo.Context) error {
 	)
 }
 
-func (rc *ReviewController) getByCategory(context echo.Context) error {
+func (rc *reviewController) getByCategory(context echo.Context) error {
 	grbcDto, err := rc.validator.ValidateGetByCategory(context)
 	if err != nil {
 		return err
@@ -182,7 +182,7 @@ func (rc *ReviewController) getByCategory(context echo.Context) error {
 	)
 }
 
-func (rc *ReviewController) getBySeries(context echo.Context) error {
+func (rc *reviewController) getBySeries(context echo.Context) error {
 	grbsDto, err := rc.validator.ValidateGetBySeries(context)
 	if err != nil {
 		return err

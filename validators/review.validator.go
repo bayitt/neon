@@ -137,7 +137,7 @@ func (rv *ReviewValidator) ValidateGet(context echo.Context) (models.Review, err
 		)
 	}
 
-	review, err := rv.Rs.FindUnique("uuid", grDto.Uuid.String(), true)
+	review, err := rv.Rs.FindUnique("slug", grDto.Slug, true)
 	if err != nil {
 		return models.Review{}, err
 	}
