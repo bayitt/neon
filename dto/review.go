@@ -35,7 +35,7 @@ type UpdateReviewDto struct {
 }
 
 type GetReviewDto struct {
-	Slug string `param:"string"`
+	Slug string `param:"slug"`
 }
 
 type GetReviewsDto struct {

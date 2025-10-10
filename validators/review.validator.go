@@ -137,6 +137,8 @@ func (rv *ReviewValidator) ValidateGet(context echo.Context) (models.Review, err
 		)
 	}
 
+	grDto.Slug = "/" + grDto.Slug
+
 	review, err := rv.Rs.FindUnique("slug", grDto.Slug, true)
 	if err != nil {
 		return models.Review{}, err
