@@ -4,12 +4,14 @@ import (
 	"errors"
 	"fmt"
 	"maps"
+	"math/rand"
 	"neon/dto"
 	"neon/models"
 	"neon/utilities"
 	"net/http"
 	"slices"
 	"strings"
+	"time"
 
 	"gorm.io/gorm"
 	"gorm.io/gorm/clause"
@@ -137,6 +139,23 @@ func (rs *ReviewService) FindCategoryReviews(
 		parsedReviews = append(parsedReviews, review)
 	}
 	return parsedReviews, nil
+}
+
+func (rs *ReviewService) FindCategoriesReviews(categories []models.Category) ([]models.Review, error) {
+	var categoryIds = []uint{}
+
+	for _, category := range categories {
+		categoryIds = append(categoryIds, category.ID)
+	}
+
+	var totalCategoriesReviews int64
+	rs.DB.Model(models.CategoryReview{}).Where("category_id IN ?", categoryIds).Count(&totalCategoriesReviews)
+
+	rand.Seed(time.Now().UnixNano())
+	randomOffset := rand.Int63n(totalCategoriesReviews - 3)
+
+	var categoryReviews []models.CategoryReview
+	result := rs.DB.Offset(int(randomOffset)).Limit(3).Find(&categoryReviews)
 }
 
 func (rs *ReviewService) Count(where map[string]uint) uint {

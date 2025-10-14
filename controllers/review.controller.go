@@ -182,6 +182,14 @@ func (rc *reviewController) getByCategory(context echo.Context) error {
 	)
 }
 
+func (rc *reviewController) getByCategories(context echo.Context) error {
+	grbcDto, err := rc.validator.ValidateGetByCategories(context)
+	if err != nil {
+		return err
+	}
+
+}
+
 func (rc *reviewController) getBySeries(context echo.Context) error {
 	grbsDto, err := rc.validator.ValidateGetBySeries(context)
 	if err != nil {

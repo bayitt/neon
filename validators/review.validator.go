@@ -189,6 +189,32 @@ func (rv *ReviewValidator) ValidateGetByCategory(
 	return grbcDto, nil
 }
 
+func (rv *ReviewValidator) ValidateGetByCategories(context echo.Context) (*dto.GetReviewsByCategoriesDto, error) {
+	grbcDto := new(dto.GetReviewsByCategoriesDto)
+
+	if err := context.Bind(grbcDto); err != nil {
+		return nil, utilities.ThrowError(http.StatusBadRequest, "MALFORMED_REQUEST", err.Error())
+	}
+
+	if err := context.Validate(grbcDto); err != nil {
+		return nil, err
+	}
+
+	var categories = []models.Category{}
+	for _, categoryUuid := range grbcDto.CategoryUuids {
+		category, categoryErr := rv.Cs.FindUnique("uuid", categoryUuid.String())
+		if categoryErr != nil {
+			return nil, categoryErr
+		}
+
+		categories = append(categories, category)
+	}
+
+	grbcDto.Categories = categories
+
+	return grbcDto, nil
+}
+
 func (rv *ReviewValidator) ValidateGetBySeries(
 	context echo.Context,
 ) (*dto.GetReviewsBySeriesDto, error) {

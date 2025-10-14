@@ -50,6 +50,12 @@ type GetReviewsByCategoryDto struct {
 	Category models.Category
 }
 
+type GetReviewsByCategoriesDto struct {
+	CategoryUuids []uuid.UUID `json:"category_uuids" validate:"required"`
+
+	Categories []models.Category
+}
+
 type GetReviewsBySeriesDto struct {
 	SeriesUuid uuid.UUID `param:"series_uuid"`
 
