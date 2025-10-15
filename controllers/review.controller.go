@@ -37,6 +37,7 @@ func RegisterReviewRoutes(app *echo.Echo) {
 	updateReviewGroup.PUT("", rc.update)
 
 	app.GET("/categories/:category_uuid/reviews", rc.getByCategory)
+	app.GET("/categories/reviews", rc.getByCategories)
 	app.GET("/series/:series_uuid/reviews", rc.getBySeries)
 	app.GET("/reviews/:slug", rc.get)
 	app.GET("/reviews", rc.getAll)
@@ -188,6 +189,12 @@ func (rc *reviewController) getByCategories(context echo.Context) error {
 		return err
 	}
 
+	reviews, reviewErr := rc.service.FindCategoriesReviews(grbcDto.Categories)
+	if reviewErr != nil {
+		return reviewErr
+	}
+
+	return context.JSON(http.StatusOK, parseReviews(context, reviews))
 }
 
 func (rc *reviewController) getBySeries(context echo.Context) error {

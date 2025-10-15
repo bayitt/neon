@@ -51,7 +51,7 @@ type GetReviewsByCategoryDto struct {
 }
 
 type GetReviewsByCategoriesDto struct {
-	CategoryUuids []uuid.UUID `json:"category_uuids" validate:"required"`
+	CategoryUuids string `query:"category_uuids" validate:"required"`
 
 	Categories []models.Category
 }

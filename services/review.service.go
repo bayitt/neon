@@ -11,7 +11,6 @@ import (
 	"net/http"
 	"slices"
 	"strings"
-	"time"
 
 	"gorm.io/gorm"
 	"gorm.io/gorm/clause"
@@ -141,7 +140,9 @@ func (rs *ReviewService) FindCategoryReviews(
 	return parsedReviews, nil
 }
 
-func (rs *ReviewService) FindCategoriesReviews(categories []models.Category) ([]models.Review, error) {
+func (rs *ReviewService) FindCategoriesReviews(
+	categories []models.Category,
+) ([]models.Review, error) {
 	var categoryIds = []uint{}
 
 	for _, category := range categories {
@@ -149,13 +150,50 @@ func (rs *ReviewService) FindCategoriesReviews(categories []models.Category) ([]
 	}
 
 	var totalCategoriesReviews int64
-	rs.DB.Model(models.CategoryReview{}).Where("category_id IN ?", categoryIds).Count(&totalCategoriesReviews)
-
-	rand.Seed(time.Now().UnixNano())
-	randomOffset := rand.Int63n(totalCategoriesReviews - 3)
-
+	rs.DB.Model(models.CategoryReview{}).
+		Where("category_id IN ?", categoryIds).
+		Count(&totalCategoriesReviews)
 	var categoryReviews []models.CategoryReview
-	result := rs.DB.Offset(int(randomOffset)).Limit(3).Find(&categoryReviews)
+	var reviews []models.Review = make([]models.Review, 0)
+	var reviewIds = []uint{}
+
+	var result *gorm.DB
+
+	if totalCategoriesReviews <= 3 {
+		result = rs.DB.Where("category_id IN ?", categoryIds).Find(&categoryReviews)
+	} else {
+		randomOffset := rand.Int63n(totalCategoriesReviews - 3)
+		result = rs.DB.Where("category_id IN ?", categoryIds).Offset(int(randomOffset)).Limit(3).Find(&categoryReviews)
+	}
+
+	if result.Error != nil {
+		return []models.Review{}, utilities.ThrowError(
+			http.StatusInternalServerError,
+			"INTERNAL_SERVER_ERROR",
+			result.Error.Error(),
+		)
+	}
+
+	for _, categoryReview := range categoryReviews {
+		reviewIds = append(reviewIds, categoryReview.ReviewID)
+	}
+
+	result = rs.DB.Where("id IN ?", reviewIds).Preload(clause.Associations).Find(&reviews)
+	if result.Error != nil {
+		return []models.Review{}, utilities.ThrowError(
+			http.StatusInternalServerError,
+			"INTERNAL_SERVER_ERROR",
+			result.Error.Error(),
+		)
+	}
+
+	parsedReviews := []models.Review{}
+	for _, review := range reviews {
+		review.Excerpt = review.Content[0:200]
+		parsedReviews = append(parsedReviews, review)
+	}
+
+	return parsedReviews, nil
 }
 
 func (rs *ReviewService) Count(where map[string]uint) uint {

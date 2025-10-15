@@ -189,7 +189,9 @@ func (rv *ReviewValidator) ValidateGetByCategory(
 	return grbcDto, nil
 }
 
-func (rv *ReviewValidator) ValidateGetByCategories(context echo.Context) (*dto.GetReviewsByCategoriesDto, error) {
+func (rv *ReviewValidator) ValidateGetByCategories(
+	context echo.Context,
+) (*dto.GetReviewsByCategoriesDto, error) {
 	grbcDto := new(dto.GetReviewsByCategoriesDto)
 
 	if err := context.Bind(grbcDto); err != nil {
@@ -200,9 +202,11 @@ func (rv *ReviewValidator) ValidateGetByCategories(context echo.Context) (*dto.G
 		return nil, err
 	}
 
+	categoryUuids := strings.Split(grbcDto.CategoryUuids, ".")
+
 	var categories = []models.Category{}
-	for _, categoryUuid := range grbcDto.CategoryUuids {
-		category, categoryErr := rv.Cs.FindUnique("uuid", categoryUuid.String())
+	for _, categoryUuid := range categoryUuids {
+		category, categoryErr := rv.Cs.FindUnique("uuid", categoryUuid)
 		if categoryErr != nil {
 			return nil, categoryErr
 		}
