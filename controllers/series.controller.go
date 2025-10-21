@@ -14,7 +14,7 @@ import (
 	"github.com/labstack/echo/v4"
 )
 
-type SeriesController struct {
+type seriesController struct {
 	service   *services.SeriesService
 	validator *validators.SeriesValidator
 }
@@ -22,7 +22,7 @@ type SeriesController struct {
 func RegisterSeriesRoutes(app *echo.Echo) {
 	db := utilities.GetDatabaseObject()
 	ss := &services.SeriesService{DB: db}
-	sc := &SeriesController{service: ss, validator: &validators.SeriesValidator{Service: ss}}
+	sc := &seriesController{service: ss, validator: &validators.SeriesValidator{Service: ss}}
 
 	guardedGroup := app.Group("/series")
 	guardedGroup.Use(middleware.AuthMiddleware)
@@ -61,7 +61,7 @@ func parseSeries(context echo.Context, series []models.Series) []map[string]inte
 	return parsedSeries
 }
 
-func (sc *SeriesController) create(context echo.Context) error {
+func (sc *seriesController) create(context echo.Context) error {
 	csDto, err := sc.validator.ValidateCreate(context)
 	if err != nil {
 		return err
@@ -74,7 +74,7 @@ func (sc *SeriesController) create(context echo.Context) error {
 	return context.JSON(http.StatusCreated, series)
 }
 
-func (sc *SeriesController) update(context echo.Context) error {
+func (sc *seriesController) update(context echo.Context) error {
 	series, usDto, err := sc.validator.ValidateUpdate(context)
 	if err != nil {
 		return err
@@ -87,7 +87,7 @@ func (sc *SeriesController) update(context echo.Context) error {
 	return context.JSON(http.StatusOK, updatedSeries)
 }
 
-func (sc *SeriesController) getBySlug(context echo.Context) error {
+func (sc *seriesController) getBySlug(context echo.Context) error {
 	series, err := sc.validator.ValidateGetBySlug(context)
 	if err != nil {
 		return err
@@ -97,7 +97,7 @@ func (sc *SeriesController) getBySlug(context echo.Context) error {
 	return context.JSON(http.StatusOK, parsedSeries)
 }
 
-func (sc *SeriesController) getAll(context echo.Context) error {
+func (sc *seriesController) getAll(context echo.Context) error {
 	gsDto, err := sc.validator.ValidateFind(context)
 	if err != nil {
 		return err

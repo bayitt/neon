@@ -35,7 +35,7 @@ type UpdateReviewDto struct {
 }
 
 type GetReviewDto struct {
-	Uuid uuid.UUID `param:"uuid"`
+	Slug string `param:"slug"`
 }
 
 type GetReviewsDto struct {
@@ -48,6 +48,12 @@ type GetReviewsByCategoryDto struct {
 	CategoryUuid uuid.UUID `param:"category_uuid"`
 
 	Category models.Category
+}
+
+type GetReviewsByCategoriesDto struct {
+	CategoryUuids string `query:"category_uuids" validate:"required"`
+
+	Categories []models.Category
 }
 
 type GetReviewsBySeriesDto struct {

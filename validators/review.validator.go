@@ -137,7 +137,9 @@ func (rv *ReviewValidator) ValidateGet(context echo.Context) (models.Review, err
 		)
 	}
 
-	review, err := rv.Rs.FindUnique("uuid", grDto.Uuid.String(), true)
+	grDto.Slug = "/" + grDto.Slug
+
+	review, err := rv.Rs.FindUnique("slug", grDto.Slug, true)
 	if err != nil {
 		return models.Review{}, err
 	}
@@ -184,6 +186,36 @@ func (rv *ReviewValidator) ValidateGetByCategory(
 	}
 
 	grbcDto.Category = category
+	return grbcDto, nil
+}
+
+func (rv *ReviewValidator) ValidateGetByCategories(
+	context echo.Context,
+) (*dto.GetReviewsByCategoriesDto, error) {
+	grbcDto := new(dto.GetReviewsByCategoriesDto)
+
+	if err := context.Bind(grbcDto); err != nil {
+		return nil, utilities.ThrowError(http.StatusBadRequest, "MALFORMED_REQUEST", err.Error())
+	}
+
+	if err := context.Validate(grbcDto); err != nil {
+		return nil, err
+	}
+
+	categoryUuids := strings.Split(grbcDto.CategoryUuids, ".")
+
+	var categories = []models.Category{}
+	for _, categoryUuid := range categoryUuids {
+		category, categoryErr := rv.Cs.FindUnique("uuid", categoryUuid)
+		if categoryErr != nil {
+			return nil, categoryErr
+		}
+
+		categories = append(categories, category)
+	}
+
+	grbcDto.Categories = categories
+
 	return grbcDto, nil
 }
 

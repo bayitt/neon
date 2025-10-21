@@ -13,16 +13,16 @@ import (
 	"github.com/markbates/goth/gothic"
 )
 
-type OauthController struct {
+type oauthController struct {
 }
 
 func RegisterOauthRoutes(group *echo.Group) {
-	oc := &OauthController{}
+	oc := &oauthController{}
 	group.GET("/initiate", oc.redirect)
 	group.GET("/authorize", oc.callbackHandler)
 }
 
-func (oauthController *OauthController) redirect(context echo.Context) error {
+func (oauthController *oauthController) redirect(context echo.Context) error {
 	query := context.Request().URL.Query()
 	query.Add("provider", "google")
 	context.Request().URL.RawQuery = query.Encode()
@@ -40,7 +40,7 @@ func (oauthController *OauthController) redirect(context echo.Context) error {
 	return nil
 }
 
-func (oauthController *OauthController) callbackHandler(context echo.Context) error {
+func (oauthController *oauthController) callbackHandler(context echo.Context) error {
 	query := context.Request().URL.Query()
 	query.Add("provider", "google")
 	context.Request().URL.RawQuery = query.Encode()
