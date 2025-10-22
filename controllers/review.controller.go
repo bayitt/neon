@@ -242,6 +242,13 @@ func (rc *reviewController) notify(ctx echo.Context) error {
 	templateStr, _ := os.ReadFile(templatePath)
 	templateObject, _ := template.New("New Book Review !").Parse(string(templateStr))
 
+	var seriesName, seriesSlug string
+
+	if review.Series != nil {
+		seriesName = review.Series.Name
+		seriesSlug = review.Series.Slug
+	}
+
 	var parsedTemplateStr bytes.Buffer
 	templateObject.Execute(
 		&parsedTemplateStr,
@@ -249,10 +256,10 @@ func (rc *reviewController) notify(ctx echo.Context) error {
 			"Message":     nrDto.Message,
 			"Title":       cases.Title(language.Und).String(review.Title),
 			"Author":      cases.Title(language.Und).String(review.Author),
-			"Slug":        review.Series.Slug,
+			"Slug":        review.Slug,
 			"Image":       *review.Image,
-			"Series_Name": cases.Title(language.Und).String(review.Series.Name),
-			"Series_Slug": review.Series.Slug,
+			"Series_Name": cases.Title(language.Und).String(seriesName),
+			"Series_Slug": seriesSlug,
 		},
 	)
 

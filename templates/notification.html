@@ -97,11 +97,13 @@
                                                     <p style="margin: 0 0 7px 0; font-weight: 600;">A Review of {{
                                                         .Title }} By Olamileke Fambegbe</p>
                                                     <p style="margin: 0 0 7px 0">Book by {{ .Author }}</p>
+                                                    {{if .Series_Name}}
                                                     <p style="margin: 0 0 7px 0">Published in the series <a
                                                             href="https://library.olamileke.dev/series{{ .Series_Slug }}"
                                                             style="color: #286ed0; text-decoration: underline;">{{
                                                             .Series_Name }}</a>
                                                     </p>
+                                                    {{end}}
                                                     <a href="https://library.olamileke.dev{{ .Slug }}"
                                                         style="color: #286ed0; text-decoration: underline;">Read the
                                                         review
