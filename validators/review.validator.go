@@ -235,3 +235,29 @@ func (rv *ReviewValidator) ValidateGetBySeries(
 	grbsDto.Series = series
 	return grbsDto, nil
 }
+
+func (rv *ReviewValidator) ValidateNotify(
+	context echo.Context,
+) (models.Review, *dto.NotifyReviewDto, error) {
+	nrDto := new(dto.NotifyReviewDto)
+
+	if err := context.Bind(nrDto); err != nil {
+		return models.Review{}, nil, utilities.ThrowError(
+			http.StatusBadRequest,
+			"MALFORMED_REQUEST",
+			err.Error(),
+		)
+	}
+
+	if err := context.Validate(nrDto); err != nil {
+		return models.Review{}, nil, err
+	}
+
+	review, err := rv.Rs.FindUnique("uuid", nrDto.Uuid.String(), true)
+
+	if err != nil {
+		return models.Review{}, nil, err
+	}
+
+	return review, nrDto, nil
+}
