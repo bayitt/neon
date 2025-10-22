@@ -28,3 +28,18 @@ func (ss *SubscriberService) Create(csDto *dto.CreateSubscriberDto) (models.Subs
 
 	return subscriber, nil
 }
+
+func (ss *SubscriberService) Find() ([]models.Subscriber, error) {
+	var subscribers []models.Subscriber
+	result := ss.DB.Find(&subscribers)
+
+	if result.Error != nil {
+		return []models.Subscriber{}, utilities.ThrowError(
+			http.StatusInternalServerError,
+			"INTERNAL_SERVER_ERROR",
+			result.Error.Error(),
+		)
+	}
+
+	return subscribers, nil
+}

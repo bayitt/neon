@@ -61,3 +61,8 @@ type GetReviewsBySeriesDto struct {
 
 	Series models.Series
 }
+
+type NotifyReviewDto struct {
+	Uuid    uuid.UUID `param:"uuid"`
+	Message string    `             json:"message" validate:"required"`
+}

@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <title>Review Notification</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <style type="text/css">
+        @import url("https://fonts.googleapis.com/css2?family=Quicksand&display=swap");
+
+        .table__parent {
+            padding: 50px;
+            background: rgba(0, 0, 0, 0.01);
+            font-size: 0.95rem
+        }
+
+        .table__main {
+            padding: 25px 35px 37px 35px;
+            line-height: 1.7;
+        }
+
+        .review__message {
+            margin: 0 0 15px 0;
+        }
+
+        img.review__content-book {
+            position: relative;
+            top: 5px;
+            float: left;
+        }
+
+        .review__content-details {
+            margin-left: 190px;
+            padding-top: 20px
+        }
+
+        @media(max-width: 610px) {
+            .table__parent {
+                padding: 10px;
+                font-size: 0.9rem
+            }
+
+            .table__main {
+                padding: 20px;
+            }
+
+            .review__message {
+                margin: 0 0 25px 0;
+            }
+
+            .review__content {
+                text-align: center;
+            }
+
+            .review__content-details {
+                margin: 15px 0 0 0;
+                padding: 0;
+            }
+
+            img.review__content-book {
+                float: none
+            }
+        }
+    </style>
+</head>
+
+<body style="
+      margin: 0;
+      padding: 0;
+      font-family: georgia, serif;
+      color: #333;
+    ">
+    <table width="100%" class="table__parent" cellpadding="0" cellspacing="0">
+        <tr>
+            <td>
+                <table width="600px" class="table__main" align="center" cellpadding="0" cellspacing="0" bgcolor="white">
+                    <tr>
+                        <td align="center">
+                            <img class="logo"
+                                src="https://res.cloudinary.com/olamileke/image/upload/c_thumb,w_200,g_face/v1760027186/chequer_dev/ol-high-resolution-logo_fmyams.png"
+                                width="40px" height="40px" style="margin: 0 0 7px 0;" alt="Olamileke's Library" />
+                        </td>
+                    </tr>
+                    <tr>
+                        <td>
+                            <table width="100%">
+                                <tr>
+                                    <td width="100%">
+                                        <div>
+                                            <p class="review__message">
+                                                {{ .Message }}
+                                            </p>
+                                            <div class="review__content">
+                                                <img src="{{ .Image }}" alt="The well of ascension" height="250px"
+                                                    class="review__content-book" />
+
+                                                <div class="review__content-details">
+                                                    <p style="margin: 0 0 7px 0; font-weight: 600;">A Review of {{
+                                                        .Title }} By Olamileke Fambegbe</p>
+                                                    <p style="margin: 0 0 7px 0">Book by {{ .Author }}</p>
+                                                    <p style="margin: 0 0 7px 0">Published in the series <a
+                                                            href="https://library.olamileke.dev/series{{ .Series_Slug }}"
+                                                            style="color: #286ed0; text-decoration: underline;">{{
+                                                            .Series_Name }}</a>
+                                                    </p>
+                                                    <a href="https://library.olamileke.dev{{ .Slug }}"
+                                                        style="color: #286ed0; text-decoration: underline;">Read the
+                                                        review
+                                                    </a>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </td>
+                                </tr>
+                            </table>
+                        </td>
+                    </tr>
+                </table>
+            </td>
+        </tr>
+    </table>
+</body>
+
+</html>
