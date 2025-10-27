@@ -19,10 +19,10 @@ func GetDatabaseObject() *gorm.DB {
 	}
 
 	dsn := fmt.Sprintf(
-		"host=%s user=%s password=%s dbname=%s sslmode=disable Timezone=GMT",
-		os.Getenv("DATABASE_HOST"),
+		"postgresql://%s:%s@%s/%s?sslmode=require&channel_binding=require",
 		os.Getenv("DATABASE_USER"),
 		os.Getenv("DATABASE_PASSWORD"),
+		os.Getenv("DATABASE_HOST"),
 		os.Getenv("DATABASE_NAME"),
 	)
 	db, err := gorm.Open(postgres.Open(dsn), &gorm.Config{
