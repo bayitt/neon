@@ -51,7 +51,7 @@ func RegisterReviewRoutes(app *echo.Echo) {
 	notifyReviewGroup.Use(middleware.AuthMiddleware)
 	notifyReviewGroup.POST("", rc.notify)
 
-	app.GET("/categories/:category_uuid/reviews", rc.getByCategory)
+	app.GET("/categories/:category_slug/reviews", rc.getByCategory)
 	app.GET("/categories/reviews", rc.getByCategories)
 	app.GET("/series/:series_uuid/reviews", rc.getBySeries)
 	app.GET("/reviews/:slug", rc.get)
@@ -272,10 +272,13 @@ func (rc *reviewController) notify(ctx echo.Context) error {
 		subscriberEmails = append(
 			subscriberEmails,
 			&resend.SendEmailRequest{
-				From:    mailFrom,
-				To:      []string{subscriber.Email},
-				Subject: fmt.Sprintf("New Review - %s", cases.Title(language.Und).String(review.Title)),
-				Html:    parsedTemplateStr.String(),
+				From: mailFrom,
+				To:   []string{subscriber.Email},
+				Subject: fmt.Sprintf(
+					"New Review - %s",
+					cases.Title(language.Und).String(review.Title),
+				),
+				Html: parsedTemplateStr.String(),
 			},
 		)
 	}

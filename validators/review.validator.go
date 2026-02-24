@@ -180,7 +180,8 @@ func (rv *ReviewValidator) ValidateGetByCategory(
 		grbcDto.Count = 10
 	}
 
-	category, categoryErr := rv.Cs.FindUnique("uuid", grbcDto.CategoryUuid.String())
+	categorySlug := "/" + grbcDto.CategorySlug
+	category, categoryErr := rv.Cs.FindUnique("slug", categorySlug)
 	if categoryErr != nil {
 		return nil, categoryErr
 	}
