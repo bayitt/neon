@@ -228,7 +228,8 @@ func (rv *ReviewValidator) ValidateGetBySeries(
 		return nil, utilities.ThrowError(http.StatusBadRequest, "MALFORMED_REQUEST", err.Error())
 	}
 
-	series, seriesErr := rv.Ss.FindUnique("uuid", grbsDto.SeriesUuid.String())
+	seriesSlug := "/" + grbsDto.SeriesSlug
+	series, seriesErr := rv.Ss.FindUnique("slug", seriesSlug)
 	if seriesErr != nil {
 		return nil, seriesErr
 	}

@@ -53,7 +53,7 @@ func RegisterReviewRoutes(app *echo.Echo) {
 
 	app.GET("/categories/:category_slug/reviews", rc.getByCategory)
 	app.GET("/categories/reviews", rc.getByCategories)
-	app.GET("/series/:series_uuid/reviews", rc.getBySeries)
+	app.GET("/series/:series_slug/reviews", rc.getBySeries)
 	app.GET("/reviews/:slug", rc.get)
 	app.GET("/reviews", rc.getAll)
 }
