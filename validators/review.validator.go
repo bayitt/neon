@@ -180,7 +180,8 @@ func (rv *ReviewValidator) ValidateGetByCategory(
 		grbcDto.Count = 10
 	}
 
-	category, categoryErr := rv.Cs.FindUnique("uuid", grbcDto.CategoryUuid.String())
+	categorySlug := "/" + grbcDto.CategorySlug
+	category, categoryErr := rv.Cs.FindUnique("slug", categorySlug)
 	if categoryErr != nil {
 		return nil, categoryErr
 	}
@@ -227,7 +228,8 @@ func (rv *ReviewValidator) ValidateGetBySeries(
 		return nil, utilities.ThrowError(http.StatusBadRequest, "MALFORMED_REQUEST", err.Error())
 	}
 
-	series, seriesErr := rv.Ss.FindUnique("uuid", grbsDto.SeriesUuid.String())
+	seriesSlug := "/" + grbsDto.SeriesSlug
+	series, seriesErr := rv.Ss.FindUnique("slug", seriesSlug)
 	if seriesErr != nil {
 		return nil, seriesErr
 	}
