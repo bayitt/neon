@@ -18,7 +18,11 @@ type SeriesService struct {
 
 func (ss *SeriesService) FindUnique(field string, value string) (models.Series, error) {
 	var series models.Series
-	result := ss.DB.Where(fmt.Sprintf("%s = ?", field), value).First(&series)
+	result := ss.DB.Where(fmt.Sprintf("%s = ?", field), value).
+		Preload("Reviews", func(db *gorm.DB) *gorm.DB {
+			return db.Order("reviews.created_at DESC").Select("SeriesID", "Image")
+		}).
+		First(&series)
 
 	if errors.Is(result.Error, gorm.ErrRecordNotFound) {
 		return series, utilities.ThrowError(
@@ -27,6 +31,20 @@ func (ss *SeriesService) FindUnique(field string, value string) (models.Series, 
 			fmt.Sprintf("series with field %s and value %s does not exist", field, value),
 		)
 	}
+
+	var images []string
+
+	if len(series.Reviews) == 0 {
+		series.Images = make([]string, 0)
+	} else {
+		for _, review := range series.Reviews {
+			if len(*review.Image) > 0 {
+				images = append(images, *review.Image)
+			}
+		}
+	}
+
+	series.Images = images
 
 	return series, nil
 }
